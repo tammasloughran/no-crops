@@ -4,6 +4,7 @@ import glob
 import os
 
 import ipdb
+import numpy as np
 import cdo_decorators as cdod
 import matplotlib.pyplot as plt
 import netCDF4 as nc
@@ -14,37 +15,85 @@ cdo.debug = True
 
 TILE_FRAC_VAR = 'fld_s03i317'
 WOOD_VAR = 'fld_s03i853'
-ARCHIVE_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
+NOCROP_ARCHIVE_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
+PROCESSED_NOCROP_DIR = '/g/data/p66/tfl561/archive_data'
 EXPERIMENTS = [
-        #'esm-esm-piFewCrops',
         'esm-esm-piNoCrops',
-        #'esm-esm-pi',
         #'old_esm-piNoCrops',
-        'esm-esm-pre-industrial',
-        #'esm-esm-pi1850Luc',
-        #'esm-historical',
-        #'esm-historical-no-luc',
+        #'esm-esm-pre-industrial',
         ]
 UM_DATA = 'history/atm/netCDF'
+NOCROPS_VARIABLES = [
+        'cCoarseWoodyDebris',
+        'cLeaf',
+        'cMetabolic',
+        'cMicrobial',
+        'cPassive',
+        'cRoot',
+        'cSlow',
+        'cStructural',
+        'cWood',
+        'tas',
+        ]
+PI_L_VARIABLES = [
+        'cLeaf',
+        'cLitter',
+        'cRoot',
+        'cCwd',
+        ]
+PI_E_VARIABLES = [
+        'cWood',
+        'cSoil',
+        ]
+PI_A_VARIABLES = [
+        'tas',
+        ]
+PLOT_VARS = ['cLeaf','cWood','cLitter','cSoil','cRoot','cCwd','tas']
+#PI_DIR = '/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/esm-piControl/r1i1p1f1'
+PI_DIR = '/g/data/p73/archive/CMIP6/ACCESS-ESM1-5/PI-EDC-01/history/atm/netCDF'
+LAND_FRAC = '/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/esm-piControl/r1i1p1f1' \
+        '/fx/sftlf/gn/latest/sftlf_fx_ACCESS-ESM1-5_esm-piControl_r1i1p1f1_gn.nc'
 
 
 @cdod.cdo_selvar(TILE_FRAC_VAR)
 @cdod.cdo_mul(input1='cell_area.nc')
-@cdod.cdo_ifthen(input1='fractions.nc')
-def cdo_get_tile_areas(input:str, output:str):
+@cdod.cdo_ifthen(input1=LAND_FRAC)
+def cdo_get_tile_areas(input:str, output:str)->None:
     cdo.copy(input=input, output=output, options='-L')
 
 
+@cdod.cdo_cat(input2='')
 @cdod.cdo_divc('1e15')
 @cdod.cdo_mul(input2='tile_areas.nc')
-@cdod.cdo_sellevel('1','2','3','4')
 @cdod.cdo_fldsum
 @cdod.cdo_vertsum
-def cdo_load_global_sum(input:str, varname:str):
+def cdo_load_global_sum(input:str, varname:str)->np.ndarray:
+    """Global sum using cdo and load.
+    """
     return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
 
 
-def nc_selvar(filename, varname, outfile):
+@cdod.cdo_cat(input2='')
+@cdod.cdo_mul(input2=LAND_FRAC)
+@cdod.cdo_divc('1e12')
+@cdod.cdo_fldsum
+@cdod.cdo_vertsum
+def cdo_load_global_sum2(input:str, varname:str)->np.ndarray:
+    """Global sum using cdo and load, except it uses the sftfl variable from CMIP6 and the correct
+    unit conversion.
+    """
+    return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
+
+
+@cdod.cdo_cat(input2='')
+@cdod.cdo_fldmean()
+def cdo_load_global_mean(input:str, varname:str)->np.ndarray:
+    return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
+
+
+def nc_selvar(filename:str, varname:str, outfile:str)->None:
+    """Copy a variable from a netCDF file.
+    """
     print(outfile)
     ncfile = nc.Dataset(filename, 'r')
     var = ncfile.variables[varname]
@@ -75,28 +124,62 @@ if __name__=='__main__':
     # Create plot canvas
     plt.figure()
 
-    for exp in EXPERIMENTS:
-        # Calculate tile areas.
-        example_file = f'{ARCHIVE_DIR}/{exp}/{UM_DATA}/{exp}.pa-010101_mon.nc'
-        cdo.gridarea(input=example_file, output='cell_area.nc')
-        cdo_get_tile_areas(input=example_file, output='tile_areas.nc')
+    # Calculate tile areas.
+    exp = 'esm-esm-piNoCrops'
+    example_file = f'{NOCROP_ARCHIVE_DIR}/{exp}/{UM_DATA}/{exp}.pa-010101_mon.nc'
+    cdo.gridarea(input=example_file, output='cell_area.nc')
+    cdo_get_tile_areas(input=example_file, output='tile_areas.nc')
 
-        print("Create concatenated wood only file for", exp)
-        ncfiles = sorted(glob.glob(f'{ARCHIVE_DIR}/{exp}/{UM_DATA}/*pa*.nc'))
-        for ncfile in ncfiles:
-            nc_selvar(ncfile, WOOD_VAR, f'wood_pa{ncfile[-14:]}')
-        wood_files = sorted(glob.glob('./wood_*pa*.nc'))
-        cdo.cat(input=' '.join(wood_files), output=f'wood_{exp}.nc', options='-L')
-        for ncfile in wood_files: os.remove(ncfile)
+    # Load the variables for the no-crop experiment.
+    no_crops = {}
+    for var in NOCROPS_VARIABLES:
+        if not var=='tas':
+            no_crops[var] = cdo_load_global_sum(
+                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    varname=var,
+                    )
+        else: # Load the sureface temperature variable as a global mean.
+            no_crops[var] = cdo_load_global_mean(
+                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    varname=var,
+                    )
 
-        print("Calculate global sum of wood pool")
-        wood_pool = cdo_load_global_sum(input=f'wood_{exp}.nc', varname=WOOD_VAR)
+    # Aggregate to the CMIP variables for cSoil and cLitter.
+    no_crops['cSoil'] = no_crops['cMicrobial'] + no_crops['cSlow'] + no_crops['cPassive']
+    no_crops['cLitter'] = no_crops['cMetabolic'] + no_crops['cStructural'] + \
+            no_crops['cCoarseWoodyDebris']
+    no_crops['cCwd'] = no_crops['cCoarseWoodyDebris']
 
-        # Plot the line for this experiment
-        plt.plot(wood_pool, label=exp)
 
-    plt.legend()
-    plt.xlabel('Time (months)')
-    plt.ylabel('Wood pool (PgC)')
+    # PI-EDC-01.pa-052304_mon.nc
+    # Recreate the tile areas for the pre-industrial simulation.
+    #exp = 'PI-EDC-01'
+    #example_file = f'{PI_DIR}/PI-EDC-01.pa-010101_mon.nc'
+    exp = 'esm-esm-pre-industrial'
+    example_file = f'{NOCROP_ARCHIVE_DIR}/{exp}/{UM_DATA}/{exp}.pa-010101_mon.nc'
+    cdo_get_tile_areas(input=example_file, output='tile_areas.nc')
+
+    # Load the pre-industrial variables according to the relevant table.
+    pi_data = {}
+    for var in NOCROPS_VARIABLES:
+        if not var=='tas':
+            pi_data[var] = cdo_load_global_sum(
+                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    varname=var,
+                    )
+        else:
+            pi_data[var] = cdo_load_global_mean(
+                input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                varname=var,
+                )
+
+    for var in NOCROPS_VARIABLES:
+        plt.figure()
+        plt.plot(no_crops[var], label='esm-piNoCrops')
+        plt.plot(pi_data[var], label='esm-piControl')
+        plt.title(var)
+        plt.xlabel('Time (months)')
+        plt.ylabel('Pg C')
+        plt.legend()
     plt.show()
 
