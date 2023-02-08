@@ -57,6 +57,8 @@ LAND_FRAC = '/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/esm-piCont
 
 @cdod.cdo_selvar(TILE_FRAC_VAR)
 @cdod.cdo_mul(input1='cell_area.nc')
+@cdod.cdo_mul(input2=LAND_FRAC)
+@cdod.cdo_divc('100')
 @cdod.cdo_ifthen(input1=LAND_FRAC)
 def cdo_get_tile_areas(input:str, output:str)->None:
     cdo.copy(input=input, output=output, options='-L')
@@ -153,10 +155,8 @@ if __name__=='__main__':
 
     # PI-EDC-01.pa-052304_mon.nc
     # Recreate the tile areas for the pre-industrial simulation.
-    #exp = 'PI-EDC-01'
-    #example_file = f'{PI_DIR}/PI-EDC-01.pa-010101_mon.nc'
-    exp = 'esm-esm-pre-industrial'
-    example_file = f'{NOCROP_ARCHIVE_DIR}/{exp}/{UM_DATA}/{exp}.pa-010101_mon.nc'
+    exp = 'PI-EDC-01'
+    example_file = f'{PI_DIR}/PI-EDC-01.pa-010101_mon.nc'
     cdo_get_tile_areas(input=example_file, output='tile_areas.nc')
 
     # Load the pre-industrial variables according to the relevant table.

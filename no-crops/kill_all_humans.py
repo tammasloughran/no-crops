@@ -150,7 +150,7 @@ for t in TREE_INDEX:
 plt.show()
 
 # Save to netcdf file.
-ncout = nc.Dataset('1850_no_humans_CABLE_fraction.nc', 'w')
+ncout = nc.Dataset(f'{year}_no_humans_CABLE_fraction.nc', 'w')
 for d in ncin.dimensions:
     ncout.createDimension(d, ncin.dimensions[d].size)
 outvars = {}
@@ -171,9 +171,9 @@ outvars['longitude'].long_name = 'longitude'
 outvars['latitude'].units = 'degrees_north'
 outvars['latitude'].long_name = 'latitude'
 outvars['vegtype'].units = '\n'.join(list(CABLE_TILES.values()))
-for att in ncin.variables['fraction'].ncattrs():
-    if att=='_FillValue': continue
-    setattr(outvars['fraction'], att, ncin.variables['fraction'].getncattr(att))
+#for att in ncin.variables['fraction'].ncattrs():
+#    if att=='_FillValue': continue
+#    setattr(outvars['fraction'], att, ncin.variables['fraction'].getncattr(att))
 for att in ncin.variables['time'].ncattrs():
     setattr(outvars['time'], att, ncin.variables['time'].getncattr(att))
 for var in ['longitude','latitude','vegtype','time']:
