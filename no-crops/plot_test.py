@@ -123,9 +123,6 @@ def nc_selvar(filename:str, varname:str, outfile:str)->None:
 
 
 if __name__=='__main__':
-    # Create plot canvas
-    plt.figure()
-
     # Calculate tile areas.
     exp = 'esm-esm-piNoCrops'
     example_file = f'{NOCROP_ARCHIVE_DIR}/{exp}/{UM_DATA}/{exp}.pa-010101_mon.nc'
@@ -179,7 +176,10 @@ if __name__=='__main__':
         plt.plot(pi_data[var], label='esm-piControl')
         plt.title(var)
         plt.xlabel('Time (months)')
-        plt.ylabel('Pg C')
+        if var=='tas':
+            plt.ylabel('°C')
+        else:
+            plt.ylabel('Pg C')
         plt.legend()
     plt.show()
 
