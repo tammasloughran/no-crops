@@ -149,6 +149,11 @@ for t in TREE_INDEX:
 
 plt.show()
 
+# Print total replaced area
+area = nc.Dataset('grid_area.nc', 'r').variables['cell_area'][:].squeeze()
+difference = np.sum((area*(no_humans[TREE_INDEX] - fraction[TREE_INDEX])))
+print(difference*1e-12, 'million km2')
+
 # Save to netcdf file.
 ncout = nc.Dataset(f'{year}_no_humans_CABLE_fraction.nc', 'w')
 for d in ncin.dimensions:
