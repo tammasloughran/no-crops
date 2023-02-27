@@ -1,4 +1,4 @@
-#!/usr/bin/env/python3
+#!/usr/bin/env python3
 # Plot the test simulations of the no crop experiment.
 import glob
 import os
@@ -68,23 +68,23 @@ def cdo_get_tile_areas(input:str, output:str)->None:
 @cdod.cdo_divc('1e15')
 @cdod.cdo_mul(input2='tile_areas.nc')
 @cdod.cdo_fldsum
-@cdod.cdo_vertsum
+#@cdod.cdo_vertsum # I've decided to do this in python, because I want the pools on PFTs.
 def cdo_load_global_sum(input:str, varname:str)->np.ndarray:
     """Global sum using cdo and load.
     """
     return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
 
 
-@cdod.cdo_cat(input2='')
-@cdod.cdo_mul(input2=LAND_FRAC)
-@cdod.cdo_divc('1e12')
-@cdod.cdo_fldsum
-@cdod.cdo_vertsum
-def cdo_load_global_sum2(input:str, varname:str)->np.ndarray:
-    """Global sum using cdo and load, except it uses the sftfl variable from CMIP6 and the correct
-    unit conversion.
-    """
-    return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
+#@cdod.cdo_cat(input2='')
+#@cdod.cdo_mul(input2=LAND_FRAC)
+#@cdod.cdo_divc('1e12')
+#@cdod.cdo_fldsum
+#@cdod.cdo_vertsum
+#def cdo_load_global_sum2(input:str, varname:str)->np.ndarray:
+#    """Global sum using cdo and load, except it uses the sftfl variable from CMIP6 and the correct
+#    unit conversion.
+#    """
+#    return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
 
 
 @cdod.cdo_cat(input2='')
@@ -172,8 +172,12 @@ if __name__=='__main__':
 
     for var in NOCROPS_VARIABLES:
         plt.figure()
-        plt.plot(no_crops[var], label='esm-piNoCrops')
-        plt.plot(pi_data[var], label='esm-piControl')
+        if not var=='tas':
+            plt.plot(no_crops[var].sum(axis=1), label='esm-piNoCrops')
+            plt.plot(pi_data[var].sum(axis=1), label='esm-piControl')
+        else:
+            plt.plot(no_crops[var], label='esm-piNoCrops')
+            plt.plot(pi_data[var], label='esm-piControl')
         plt.title(var)
         plt.xlabel('Time (months)')
         if var=='tas':
@@ -181,5 +185,32 @@ if __name__=='__main__':
         else:
             plt.ylabel('Pg C')
         plt.legend()
+    plt.show()
+
+    pft_names = {
+            0:'EvgNL',
+            1:'EvgBL',
+            2:'DecNL',
+            3:'DecBL',
+            4:'Shrub',
+            5:'C3 grass',
+            6:'C4 grass',
+            7:'Tundra',
+            8:'C3 Crop',
+            }
+
+    # Plot the difference for all PFTs.
+    for var in NOCROPS_VARIABLES:
+        if var=='tas': continue
+        plt.figure()
+        for pft in range(9):
+            plt.plot(no_crops[var][:,pft] - pi_data[var][:,pft], label=f'{pft_names[pft]}')
+            plt.title(var)
+            plt.xlabel('Time (months)')
+            if var=='tas':
+                plt.ylabel('°C')
+            else:
+                plt.ylabel('Pg C')
+            plt.legend()
     plt.show()
 
