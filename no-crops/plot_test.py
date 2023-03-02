@@ -7,6 +7,8 @@ import ipdb
 import numpy as np
 import cdo_decorators as cdod
 import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 import netCDF4 as nc
 from cdo import Cdo
 
@@ -24,6 +26,7 @@ EXPERIMENTS = [
         ]
 UM_DATA = 'history/atm/netCDF'
 NOCROPS_VARIABLES = [
+        'rh',
         'cCoarseWoodyDebris',
         'cLeaf',
         'cMetabolic',
@@ -40,6 +43,7 @@ PI_L_VARIABLES = [
         'cLitter',
         'cRoot',
         'cCwd',
+        'rh',
         ]
 PI_E_VARIABLES = [
         'cWood',
@@ -48,7 +52,7 @@ PI_E_VARIABLES = [
 PI_A_VARIABLES = [
         'tas',
         ]
-PLOT_VARS = ['cLeaf','cWood','cLitter','cSoil','cRoot','cCwd','tas']
+PLOT_VARS = ['rh','cLeaf','cWood','cLitter','cSoil','cRoot','cCwd','tas']
 #PI_DIR = '/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/esm-piControl/r1i1p1f1'
 PI_DIR = '/g/data/p73/archive/CMIP6/ACCESS-ESM1-5/PI-EDC-01/history/atm/netCDF'
 LAND_FRAC = '/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/esm-piControl/r1i1p1f1' \
@@ -75,21 +79,26 @@ def cdo_load_global_sum(input:str, varname:str)->np.ndarray:
     return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
 
 
-#@cdod.cdo_cat(input2='')
-#@cdod.cdo_mul(input2=LAND_FRAC)
-#@cdod.cdo_divc('1e12')
-#@cdod.cdo_fldsum
-#@cdod.cdo_vertsum
-#def cdo_load_global_sum2(input:str, varname:str)->np.ndarray:
-#    """Global sum using cdo and load, except it uses the sftfl variable from CMIP6 and the correct
-#    unit conversion.
-#    """
-#    return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
+@cdod.cdo_cat(input2='')
+@cdod.cdo_mul(input2=LAND_FRAC)
+@cdod.cdo_divc('1e15')
+@cdod.cdo_fldsum
+def cdo_load_global_sum2(input:str, varname:str)->np.ndarray:
+    """Global sum using cdo and load for rh.
+    """
+    return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
 
 
 @cdod.cdo_cat(input2='')
 @cdod.cdo_fldmean()
 def cdo_load_global_mean(input:str, varname:str)->np.ndarray:
+    return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
+
+
+@cdod.cdo_cat(input2='')
+@cdod.cdo_seltimestep('-20/-1')
+@cdod.cdo_timmean
+def cdo_load_temp_last(input:str, varname:str):
     return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
 
 
@@ -132,8 +141,13 @@ if __name__=='__main__':
     # Load the variables for the no-crop experiment.
     no_crops = {}
     for var in NOCROPS_VARIABLES:
-        if not var=='tas':
+        if not (var=='tas' or var=='rh'):
             no_crops[var] = cdo_load_global_sum(
+                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    varname=var,
+                    )
+        elif var=='rh':
+            no_crops[var] = cdo_load_global_sum2(
                     input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
                     varname=var,
                     )
@@ -144,10 +158,10 @@ if __name__=='__main__':
                     )
 
     # Aggregate to the CMIP variables for cSoil and cLitter.
-    no_crops['cSoil'] = no_crops['cMicrobial'] + no_crops['cSlow'] + no_crops['cPassive']
-    no_crops['cLitter'] = no_crops['cMetabolic'] + no_crops['cStructural'] + \
-            no_crops['cCoarseWoodyDebris']
-    no_crops['cCwd'] = no_crops['cCoarseWoodyDebris']
+    #no_crops['cSoil'] = no_crops['cMicrobial'] + no_crops['cSlow'] + no_crops['cPassive']
+    #no_crops['cLitter'] = no_crops['cMetabolic'] + no_crops['cStructural'] + \
+    #        no_crops['cCoarseWoodyDebris']
+    #no_crops['cCwd'] = no_crops['cCoarseWoodyDebris']
 
 
     # PI-EDC-01.pa-052304_mon.nc
@@ -159,22 +173,32 @@ if __name__=='__main__':
     # Load the pre-industrial variables according to the relevant table.
     pi_data = {}
     for var in NOCROPS_VARIABLES:
-        if not var=='tas':
+        if not (var=='tas' or var=='rh'):
             pi_data[var] = cdo_load_global_sum(
+                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    varname=var,
+                    )
+        elif var=='rh':
+            pi_data[var] = cdo_load_global_sum2(
                     input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
                     varname=var,
                     )
         else:
             pi_data[var] = cdo_load_global_mean(
-                input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
-                varname=var,
-                )
+                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    varname=var,
+                    )
 
     for var in NOCROPS_VARIABLES:
         plt.figure()
-        if not var=='tas':
+        if not (var=='tas' or var=='rh'):
             plt.plot(no_crops[var].sum(axis=1), label='esm-piNoCrops')
             plt.plot(pi_data[var].sum(axis=1), label='esm-piControl')
+        elif var=='rh':
+            nocrop = no_crops[var]#.reshape(12,50).mean(axis=0)
+            pidata = pi_data[var]#.reshape(12,50).mean(axis=0)
+            plt.plot(nocrop, label='esm-piNoCrops')
+            plt.plot(pidata, label='esm-piControl')
         else:
             plt.plot(no_crops[var], label='esm-piNoCrops')
             plt.plot(pi_data[var], label='esm-piControl')
@@ -201,7 +225,7 @@ if __name__=='__main__':
 
     # Plot the difference for all PFTs.
     for var in NOCROPS_VARIABLES:
-        if var=='tas': continue
+        if var=='tas' or var=='rh': continue
         plt.figure()
         for pft in range(9):
             plt.plot(no_crops[var][:,pft] - pi_data[var][:,pft], label=f'{pft_names[pft]}')
@@ -212,5 +236,38 @@ if __name__=='__main__':
             else:
                 plt.ylabel('Pg C')
             plt.legend()
+    plt.show()
+
+    exp = 'esm-esm-piNoCrops'
+    no_crops_temp = cdo_load_temp_last(input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}.nc ]',
+            varname='tas')
+    exp = 'PI-EDC-01'
+    pi_temp = cdo_load_temp_last(input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}.nc ]',
+            varname='tas')
+
+    ncin = nc.Dataset(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}.nc')
+    lats = ncin.variables['lat_v'][:]
+    lons = ncin.variables['lon_u'][:]
+    # pcolormesh expects +1 lon.
+    llons = np.append(lons, [lons[-1] + lons[1] - lons[0]])
+    # Shift plotting to centre grid, align with coastlines.
+    llons = llons - (llons[1] - llons[0])/2
+    llats = lats - (lats[1] - lats[0])/4
+
+    # Plot the map of the difference in temperature.
+    plt.figure()
+    ax = plt.axes(projection=ccrs.Robinson())
+    plt.pcolormesh(
+            llons,
+            llats,
+            no_crops_temp - pi_temp,
+            cmap='seismic',
+            vmin=-10,
+            vmax=10,
+            transform=ccrs.PlateCarree(),
+            )
+    ax.coastlines()
+    plt.colorbar(label='$\Delta$ Temperature (°C)', orientation='horizontal')
+    plt.title('Surface temperature esm-piNoCrops - esm-piControl')
     plt.show()
 
