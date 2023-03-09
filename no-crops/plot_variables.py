@@ -37,20 +37,6 @@ NOCROPS_VARIABLES = [
         'clt', # Global mean time series and 20 year mean map.
         'mrso', # Multiply by land area, global sum, 20 year mean.
         ]
-#PI_L_VARIABLES = [
-#        'cLeaf',
-#        'cLitter',
-#        'cRoot',
-#        'cCwd',
-#        'rh',
-#        ]
-#PI_E_VARIABLES = [
-#        'cWood',
-#        'cSoil',
-#        ]
-#PI_A_VARIABLES = [
-#        'tas',
-#        ]
 CMAP = {
         'hfss':'seismic',
         'hfls':'PuOr',
@@ -78,7 +64,6 @@ TITLE = {
         'mrso':'Total soil moisture',
         }
 PLOT_VARS = NOCROPS_VARIABLES
-#PI_DIR = '/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/esm-piControl/r1i1p1f1'
 PI_DIR = '/g/data/p73/archive/CMIP6/ACCESS-ESM1-5/PI-EDC-01/history/atm/netCDF'
 LAND_FRAC = '/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/esm-piControl/r1i1p1f1' \
         '/fx/sftlf/gn/latest/sftlf_fx_ACCESS-ESM1-5_esm-piControl_r1i1p1f1_gn.nc'
@@ -91,7 +76,7 @@ def cdo_get_land_areas(input:str, output:str)->None:
     cdo.copy(input=input, output=output, options='-L')
 
 
-@cdod.cdo_divc('1e12') # kg to Pg
+@cdod.cdo_mulc('86.4') # kg s-1 to tonnes day-1
 @cdod.cdo_mul(input2='land_areas.nc')
 @cdod.cdo_fldsum
 def cdo_load_global_sum(input:str, varname:str)->np.ndarray:
@@ -113,6 +98,17 @@ def cdo_load_global_mean(input:str, varname:str)->np.ndarray:
 @cdod.cdo_seltimestep('-20/-1')
 @cdod.cdo_timmean
 def cdo_load_temp_last(input:str, varname:str):
+    ncfile = cdo.copy(input=input, returnCdf=True, options='-L')
+    data = ncfile.variables[varname][:].squeeze()
+    units = ncfile.variables[varname].units
+    return data, units
+
+
+@cdod.cdo_seltimestep('-20/-1')
+@cdod.cdo_mulc('86.4') # kg s-1 to tonnes day-1
+@cdod.cdo_mul(input2='land_areas.nc')
+@cdod.cdo_timmean
+def cdo_load_temp_last2(input:str, varname:str):
     ncfile = cdo.copy(input=input, returnCdf=True, options='-L')
     data = ncfile.variables[varname][:].squeeze()
     units = ncfile.variables[varname].units
@@ -188,31 +184,56 @@ if __name__=='__main__':
                     varname=var,
                     )
 
+    # Units
+    no_crops['pr'] *= 60*60*24
+    pi_data['pr'] *= 60*60*24
+    var_units['pr'] = 'kg m-2 day-1'
+    var_units['gpp'] = 'tonnes day-1'
+    var_units['npp'] = 'tonnes day-1'
+    var_units['ra'] = 'tonnes day-1'
+
     for var in NOCROPS_VARIABLES:
         plt.figure()
-        plt.plot(no_crops[var] - pi_data[var])
-        plt.hlines(y=0, xmin=0, xmax=len(pi_data[var]), colors='black')
-        plt.title(var)
-        plt.xlabel('Time (months)')
+        difference = no_crops[var] - pi_data[var]
+        yearly = difference.reshape((50,12)).mean(axis=1)
+        plt.plot(np.linspace(0, 51, 600, endpoint=False), difference)
+        plt.plot(range(1, 51), yearly, color='navy')
+        plt.hlines(y=0, xmin=0, xmax=51, colors='black')
+        plt.title(TITLE[var])
+        plt.xlabel('Time (year)')
         if var in ['gpp','npp','ra']:
-            plt.ylabel(f'Pg s-1')
+            plt.ylabel(f'Tonnes day-1')
         else:
             plt.ylabel(var_units[var])
-    plt.show()
+        plt.xlim(left=0, right=51)
+        plt.savefig(f'{var}_global_esm-piControl_esm-piNoCrops_difference.svg')
+    #plt.show()
 
     no_crops_last = {}
     pi_last = {}
     for var in NOCROPS_VARIABLES:
-        exp = 'esm-esm-piNoCrops'
-        no_crops_last[var], _ = cdo_load_temp_last(
-                input=f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc',
-                varname=var,
-                )
-        exp = 'PI-EDC-01'
-        pi_last[var], _ = cdo_load_temp_last(
-                input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
-                varname=var,
-                )
+        if var in ['gpp','npp','ra']:
+            exp = 'esm-esm-piNoCrops'
+            no_crops_last[var], _ = cdo_load_temp_last2(
+                    input=f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc',
+                    varname=var,
+                    )
+            exp = 'PI-EDC-01'
+            pi_last[var], _ = cdo_load_temp_last2(
+                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    varname=var,
+                    )
+        else:
+            exp = 'esm-esm-piNoCrops'
+            no_crops_last[var], _ = cdo_load_temp_last(
+                    input=f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc',
+                    varname=var,
+                    )
+            exp = 'PI-EDC-01'
+            pi_last[var], _ = cdo_load_temp_last(
+                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    varname=var,
+                    )
 
     ncin = nc.Dataset(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}.nc')
     lats = ncin.variables['lat_v'][:]
@@ -237,10 +258,13 @@ if __name__=='__main__':
                 vmin=-maxrange,
                 vmax=maxrange,
                 transform=ccrs.PlateCarree(),
+                linewidth=0,
+                rasterized=True,
                 )
         ax.coastlines()
         plt.colorbar(label=f'{var_units[var]}', orientation='horizontal')
         plt.title(f'{TITLE[var]} difference years 31-50')
         plt.tight_layout()
+        plt.savefig(f'{var}_map_esm-piControl_esm-piNoCrops_difference.svg')
     plt.show()
 
