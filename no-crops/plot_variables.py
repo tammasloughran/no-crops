@@ -2,6 +2,7 @@
 # Plot the test simulations of the no crop experiment.
 import glob
 import os
+import re
 
 import ipdb
 import numpy as np
@@ -69,6 +70,18 @@ LAND_FRAC = '/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/esm-piCont
         '/fx/sftlf/gn/latest/sftlf_fx_ACCESS-ESM1-5_esm-piControl_r1i1p1f1_gn.nc'
 
 
+def pretty_units(units:str)->str:
+    """Convert a units string into latex format.
+    """
+    units = f'${units}$'
+    units = units.replace(' ', ' \cdot ')
+    nums = re.findall('-*\d+', units)
+    sups = ['^{'+s+'}' for s in nums]
+    for num,sup in zip(nums, sups):
+        units = units.replace(num, sup)
+    return units
+
+
 @cdod.cdo_mul(input1='cell_area.nc')
 @cdod.cdo_divc('100')
 @cdod.cdo_ifthen(input1=LAND_FRAC)
@@ -86,6 +99,7 @@ def cdo_load_global_sum(input:str, varname:str)->np.ndarray:
     data = ncfile.variables[varname][:].squeeze()
     units = ncfile.variables[varname].units
     return data, units
+
 
 @cdod.cdo_fldmean()
 def cdo_load_global_mean(input:str, varname:str)->np.ndarray:
@@ -192,6 +206,10 @@ if __name__=='__main__':
     var_units['npp'] = 'tonnes day-1'
     var_units['ra'] = 'tonnes day-1'
 
+    # Make units latex pretty.
+    for key,val in var_units.items():
+        var_units[key] = pretty_units(val)
+
     for var in NOCROPS_VARIABLES:
         plt.figure()
         difference = no_crops[var] - pi_data[var]
@@ -258,13 +276,13 @@ if __name__=='__main__':
                 vmin=-maxrange,
                 vmax=maxrange,
                 transform=ccrs.PlateCarree(),
-                linewidth=0,
-                rasterized=True,
+                linewidth=0.2,
+                edgecolors='face',
                 )
         ax.coastlines()
-        plt.colorbar(label=f'{var_units[var]}', orientation='horizontal')
+        cbar = plt.colorbar(label=f'{var_units[var]}', orientation='horizontal', pad=0.05)
+        cbar.solids.set_edgecolor('face')
         plt.title(f'{TITLE[var]} difference years 31-50')
-        plt.tight_layout()
         plt.savefig(f'{var}_map_esm-piControl_esm-piNoCrops_difference.svg')
     plt.show()
 
