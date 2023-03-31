@@ -37,6 +37,7 @@ NOCROPS_VARIABLES = [
         'pr', # Global mean time series, 20 year mean map.
         'clt', # Global mean time series and 20 year mean map.
         'mrso', # Multiply by land area, global sum, 20 year mean.
+        'rh',
         ]
 CMAP = {
         'hfss':'seismic',
@@ -47,6 +48,7 @@ CMAP = {
         'gpp':'BrBG',
         'npp':'BrBG',
         'ra':'PiYG',
+        'rh':'PiYG',
         'pr':'RdBu',
         'clt':'bone',
         'mrso':'PuOr',
@@ -60,6 +62,7 @@ TITLE = {
         'gpp':'Gross primary production',
         'npp':'Net primary production',
         'ra':'Plant respiration',
+        'rh':'Soil respiration',
         'pr':'Precipitation rate',
         'clt':'Cloud fraction',
         'mrso':'Total soil moisture',
@@ -109,7 +112,7 @@ def cdo_load_global_mean(input:str, varname:str)->np.ndarray:
     return data, units
 
 
-@cdod.cdo_seltimestep('-20/-1')
+@cdod.cdo_seltimestep('-240/-1')
 @cdod.cdo_timmean
 def cdo_load_temp_last(input:str, varname:str):
     ncfile = cdo.copy(input=input, returnCdf=True, options='-L')
@@ -118,7 +121,7 @@ def cdo_load_temp_last(input:str, varname:str):
     return data, units
 
 
-@cdod.cdo_seltimestep('-20/-1')
+@cdod.cdo_seltimestep('-240/-1')
 @cdod.cdo_mulc('86.4') # kg s-1 to tonnes day-1
 @cdod.cdo_mul(input2='land_areas.nc')
 @cdod.cdo_timmean
@@ -168,7 +171,7 @@ if __name__=='__main__':
     no_crops = {}
     var_units = {}
     for var in NOCROPS_VARIABLES:
-        if var in ['gpp','npp','ra']:
+        if var in ['gpp','npp','ra','rh']:
             no_crops[var], var_units[var] = cdo_load_global_sum(
                     input=f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc',
                     varname=var,
@@ -187,7 +190,7 @@ if __name__=='__main__':
     # Load the pre-industrial variables according to the relevant table.
     pi_data = {}
     for var in NOCROPS_VARIABLES:
-        if var in ['gpp','npp','ra']:
+        if var in ['gpp','npp','ra','rh']:
             pi_data[var], _ = cdo_load_global_sum(
                     input=f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc',
                     varname=var,
@@ -205,6 +208,7 @@ if __name__=='__main__':
     var_units['gpp'] = 'tonnes day-1'
     var_units['npp'] = 'tonnes day-1'
     var_units['ra'] = 'tonnes day-1'
+    var_units['rh'] = 'tonnes day-1'
 
     # Make units latex pretty.
     for key,val in var_units.items():
@@ -219,7 +223,7 @@ if __name__=='__main__':
         plt.hlines(y=0, xmin=0, xmax=51, colors='black')
         plt.title(TITLE[var])
         plt.xlabel('Time (year)')
-        if var in ['gpp','npp','ra']:
+        if var in ['gpp','npp','ra','rh']:
             plt.ylabel(f'Tonnes day-1')
         else:
             plt.ylabel(var_units[var])
@@ -230,7 +234,7 @@ if __name__=='__main__':
     no_crops_last = {}
     pi_last = {}
     for var in NOCROPS_VARIABLES:
-        if var in ['gpp','npp','ra']:
+        if var in ['gpp','npp','ra','rh']:
             exp = 'esm-esm-piNoCrops'
             no_crops_last[var], _ = cdo_load_temp_last2(
                     input=f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc',
@@ -283,6 +287,7 @@ if __name__=='__main__':
         cbar = plt.colorbar(label=f'{var_units[var]}', orientation='horizontal', pad=0.05)
         cbar.solids.set_edgecolor('face')
         plt.title(f'{TITLE[var]} difference years 31-50')
+        plt.tight_layout()
         plt.savefig(f'{var}_map_esm-piControl_esm-piNoCrops_difference.svg')
     plt.show()
 
