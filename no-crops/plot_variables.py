@@ -228,7 +228,7 @@ if __name__=='__main__':
         else:
             plt.ylabel(var_units[var])
         plt.xlim(left=0, right=51)
-        plt.savefig(f'{var}_global_esm-piControl_esm-piNoCrops_difference.svg')
+        plt.savefig(f'plots/{var}_global_esm-piControl_esm-piNoCrops_difference.svg')
     #plt.show()
 
     no_crops_last = {}
@@ -288,6 +288,6 @@ if __name__=='__main__':
         cbar.solids.set_edgecolor('face')
         plt.title(f'{TITLE[var]} difference years 31-50')
         plt.tight_layout()
-        plt.savefig(f'{var}_map_esm-piControl_esm-piNoCrops_difference.svg')
+        plt.savefig(f'plots/{var}_map_esm-piControl_esm-piNoCrops_difference.svg')
     plt.show()
 
