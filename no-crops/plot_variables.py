@@ -71,6 +71,7 @@ PLOT_VARS = NOCROPS_VARIABLES
 PI_DIR = '/g/data/p73/archive/CMIP6/ACCESS-ESM1-5/PI-EDC-01/history/atm/netCDF'
 LAND_FRAC = '/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/esm-piControl/r1i1p1f1' \
         '/fx/sftlf/gn/latest/sftlf_fx_ACCESS-ESM1-5_esm-piControl_r1i1p1f1_gn.nc'
+NYEARS = 100
 
 
 def pretty_units(units:str)->str:
@@ -92,6 +93,7 @@ def cdo_get_land_areas(input:str, output:str)->None:
     cdo.copy(input=input, output=output, options='-L')
 
 
+@cdod.cdo_cat(input2='')
 @cdod.cdo_mulc('86.4') # kg s-1 to tonnes day-1
 @cdod.cdo_mul(input2='land_areas.nc')
 @cdod.cdo_fldsum
@@ -104,6 +106,7 @@ def cdo_load_global_sum(input:str, varname:str)->np.ndarray:
     return data, units
 
 
+@cdod.cdo_cat(input2='')
 @cdod.cdo_fldmean()
 def cdo_load_global_mean(input:str, varname:str)->np.ndarray:
     ncfile = cdo.copy(input=input, returnCdf=True, options='-L')
@@ -171,14 +174,15 @@ if __name__=='__main__':
     no_crops = {}
     var_units = {}
     for var in NOCROPS_VARIABLES:
+        files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}_*.nc'))
         if var in ['gpp','npp','ra','rh']:
             no_crops[var], var_units[var] = cdo_load_global_sum(
-                    input=f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc',
+                    input='[ '+' '.join(files)+' ]',
                     varname=var,
                     )
         else: # Load the other variables as globam mean.
             no_crops[var], var_units[var] = cdo_load_global_mean(
-                    input=f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc',
+                    input='[ '+' '.join(files)+' ]',
                     varname=var,
                     )
 
@@ -190,16 +194,11 @@ if __name__=='__main__':
     # Load the pre-industrial variables according to the relevant table.
     pi_data = {}
     for var in NOCROPS_VARIABLES:
+        files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}_*.nc'))
         if var in ['gpp','npp','ra','rh']:
-            pi_data[var], _ = cdo_load_global_sum(
-                    input=f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc',
-                    varname=var,
-                    )
+            pi_data[var], _ = cdo_load_global_sum(input='[ '+' '.join(files)+' ]', varname=var)
         else:
-            pi_data[var], _ = cdo_load_global_mean(
-                    input=f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc',
-                    varname=var,
-                    )
+            pi_data[var], _ = cdo_load_global_mean(input='[ '+' '.join(files)+' ]', varname=var)
 
     # Units
     no_crops['pr'] *= 60*60*24
@@ -217,17 +216,17 @@ if __name__=='__main__':
     for var in NOCROPS_VARIABLES:
         plt.figure()
         difference = no_crops[var] - pi_data[var]
-        yearly = difference.reshape((50,12)).mean(axis=1)
-        plt.plot(np.linspace(0, 51, 600, endpoint=False), difference)
-        plt.plot(range(1, 51), yearly, color='navy')
-        plt.hlines(y=0, xmin=0, xmax=51, colors='black')
+        yearly = difference.reshape((NYEARS,12)).mean(axis=1)
+        plt.plot(np.linspace(0, NYEARS+1, NYEARS*12, endpoint=False), difference)
+        plt.plot(range(1, NYEARS+1), yearly, color='navy')
+        plt.hlines(y=0, xmin=0, xmax=NYEARS+1, colors='black')
         plt.title(TITLE[var])
         plt.xlabel('Time (year)')
         if var in ['gpp','npp','ra','rh']:
             plt.ylabel(f'Tonnes day-1')
         else:
             plt.ylabel(var_units[var])
-        plt.xlim(left=0, right=51)
+        plt.xlim(left=0, right=NYEARS+1)
         plt.savefig(f'plots/{var}_global_esm-piControl_esm-piNoCrops_difference.svg')
     #plt.show()
 
@@ -236,28 +235,32 @@ if __name__=='__main__':
     for var in NOCROPS_VARIABLES:
         if var in ['gpp','npp','ra','rh']:
             exp = 'esm-esm-piNoCrops'
+            files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}_*.nc'))
             no_crops_last[var], _ = cdo_load_temp_last2(
-                    input=f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc',
+                    input=files[-1],
                     varname=var,
                     )
             exp = 'PI-EDC-01'
+            files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}_*.nc'))
             pi_last[var], _ = cdo_load_temp_last2(
-                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    input=files[-1],
                     varname=var,
                     )
         else:
             exp = 'esm-esm-piNoCrops'
+            files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}_*.nc'))
             no_crops_last[var], _ = cdo_load_temp_last(
-                    input=f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc',
+                    input=files[-1],
                     varname=var,
                     )
             exp = 'PI-EDC-01'
+            files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}_*.nc'))
             pi_last[var], _ = cdo_load_temp_last(
-                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    input=files[-1],
                     varname=var,
                     )
 
-    ncin = nc.Dataset(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}.nc')
+    ncin = nc.Dataset(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}_0151-0200.nc')
     lats = ncin.variables['lat_v'][:]
     lons = ncin.variables['lon_u'][:]
     # pcolormesh expects +1 lon.
@@ -286,7 +289,7 @@ if __name__=='__main__':
         ax.coastlines()
         cbar = plt.colorbar(label=f'{var_units[var]}', orientation='horizontal', pad=0.05)
         cbar.solids.set_edgecolor('face')
-        plt.title(f'{TITLE[var]} difference years 31-50')
+        plt.title(f'{TITLE[var]} difference years 81-100')
         plt.tight_layout()
         plt.savefig(f'plots/{var}_map_esm-piControl_esm-piNoCrops_difference.svg')
     plt.show()

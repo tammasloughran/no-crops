@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Plot the test simulations of the no crop experiment.
+# Plot the test pre-industrial simulations of the no crop experiment.
 import glob
 import os
 
@@ -11,6 +11,7 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import netCDF4 as nc
 from cdo import Cdo
+import ipdb
 
 cdo = Cdo()
 cdo.debug = True
@@ -96,7 +97,7 @@ def cdo_load_global_mean(input:str, varname:str)->np.ndarray:
 
 
 @cdod.cdo_cat(input2='')
-@cdod.cdo_seltimestep('-20/-1')
+@cdod.cdo_seltimestep('-240/-1') # last 20 years (20*12)
 @cdod.cdo_timmean
 def cdo_load_temp_last(input:str, varname:str):
     return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
@@ -141,19 +142,20 @@ if __name__=='__main__':
     # Load the variables for the no-crop experiment.
     no_crops = {}
     for var in NOCROPS_VARIABLES:
+        files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}_*.nc'))
         if not (var=='tas' or var=='rh'):
             no_crops[var] = cdo_load_global_sum(
-                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    input='[ '+' '.join(files)+' ]',
                     varname=var,
                     )
         elif var=='rh':
             no_crops[var] = cdo_load_global_sum2(
-                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    input='[ '+' '.join(files)+' ]',
                     varname=var,
                     )
         else: # Load the sureface temperature variable as a global mean.
             no_crops[var] = cdo_load_global_mean(
-                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    input='[ '+' '.join(files)+' ]',
                     varname=var,
                     )
 
@@ -173,19 +175,20 @@ if __name__=='__main__':
     # Load the pre-industrial variables according to the relevant table.
     pi_data = {}
     for var in NOCROPS_VARIABLES:
+        files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}_*.nc'))
         if not (var=='tas' or var=='rh'):
             pi_data[var] = cdo_load_global_sum(
-                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    input='[ '+' '.join(files)+' ]',
                     varname=var,
                     )
         elif var=='rh':
             pi_data[var] = cdo_load_global_sum2(
-                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    input='[ '+' '.join(files)+' ]',
                     varname=var,
                     )
         else:
             pi_data[var] = cdo_load_global_mean(
-                    input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}.nc ]',
+                    input='[ '+' '.join(files)+' ]',
                     varname=var,
                     )
 
@@ -209,6 +212,7 @@ if __name__=='__main__':
         else:
             plt.ylabel('Pg C')
         plt.legend()
+        plt.savefig(f'plots/{var}_timeseries.png', dpi=200)
     plt.show()
 
     pft_names = {
@@ -236,16 +240,17 @@ if __name__=='__main__':
             else:
                 plt.ylabel('Pg C')
             plt.legend()
+        plt.savefig(f'plots/{var}_difference_pfts.png', dpi=200)
     plt.show()
 
     exp = 'esm-esm-piNoCrops'
-    no_crops_temp = cdo_load_temp_last(input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}.nc ]',
-            varname='tas')
+    files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}_*.nc'))
+    no_crops_temp = cdo_load_temp_last(input=files[-1], varname='tas')
     exp = 'PI-EDC-01'
-    pi_temp = cdo_load_temp_last(input=f'[ {PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}.nc ]',
-            varname='tas')
+    files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}_*.nc'))
+    pi_temp = cdo_load_temp_last(input=files[-1], varname='tas')
 
-    ncin = nc.Dataset(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}.nc')
+    ncin = nc.Dataset(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}_0101-0150.nc')
     lats = ncin.variables['lat_v'][:]
     lons = ncin.variables['lon_u'][:]
     # pcolormesh expects +1 lon.
@@ -269,5 +274,6 @@ if __name__=='__main__':
     ax.coastlines()
     plt.colorbar(label='$\Delta$ Temperature (°C)', orientation='horizontal')
     plt.title('Surface temperature esm-piNoCrops - esm-piControl')
+    plt.savefig(f'plots/temperature_diff.png', dpi=200)
     plt.show()
 
