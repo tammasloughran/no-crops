@@ -28,12 +28,12 @@ VARIABLES = {
         }
 EXPERIMENTS = {
         'PI-GWL-t6':'GWL-NoCrops-B2030',
-        #'PI-GWL-B2035':'GWL-NoCrops-B2035',
+        'PI-GWL-B2035':'GWL-NoCrops-B2035',
         #'PI-GWL-B2040':'GWL-NoCrops-B2040',
         #'PI-GWL-B2045':'GWL-NoCrops-B2045',
         #'PI-GWL-B2050':'GWL-NoCrops-B2050',
         #'PI-GWL-B2055':'GWL-NoCrops-B2055',
-        #'PI-GWL-B2060':'GWL-NoCrops-B2060',
+        'PI-GWL-B2060':'GWL-NoCrops-B2060',
         }
 ARCHIVE_DIR = '/g/data/p66/tfl561/archive_data'
 RAW_CMIP_DIR = '/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5'
@@ -70,6 +70,7 @@ for exp in EXPERIMENTS.values():
 
 data = {}
 data_tmean = {}
+plt.figure()
 for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     for exp in [gwl_exp, nocrop_exp]:
         print(f"{exp}")
@@ -129,19 +130,19 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     cLand_diff_tmean = data_tmean[nocrop_exp]['cLand'] - data_tmean[gwl_exp]['cLand']
 
     ## Plot the difference
+    plt.figure(1)
     years = np.linspace(0, 102-(1/12), 102*12)
-    plt.figure()
-    plt.plot(years, cLand_diff.squeeze()/G_IN_PG, label='Branch 2030') # [Pg(C)]
+    plt.plot(years, cLand_diff.squeeze()/G_IN_PG, label=exp) # [Pg(C)]
     plt.xlabel('Years')
     plt.ylabel('$\Delta$ cLand [Pg(C)]')
     plt.xlim(left=0, right=102)
-    plt.ylim(bottom=0)
+    plt.ylim(bottom=0, top=200)
     plt.legend(frameon=False)
-    plt.savefig(f'plots/cLand_gloabl_sum.png', dpi=DPI)
+    #plt.savefig(f'plots/cLand_gloabl_sum.png', dpi=DPI)
 
     # Plot the difference for the last 20 years
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Robinson())
+    fig2 = plt.figure(2)
+    ax = fig2.add_subplot(1, 1, 1, projection=ccrs.Robinson())
     colors = ax.pcolormesh(
             lons,
             lats,
@@ -154,4 +155,11 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     ax.coastlines()
     plt.colorbar(colors, label='$\Delta$ cLand [Pg(C)]', orientation='horizontal', pad=0.05)
     plt.title('No crop (2030) - global warming level (2030)')
-    plt.show()
+    plt.savefig('plots/cLand_last20.png', dpi=DPI)
+
+    plt.figure(3)
+    for v in VARIABLES.keys():
+        plt.plot(data[nocrop_exp][v].squeeze() - data[gwl_exp][v].squeeze(), label=v)
+    plt.legend()
+plt.show()
+

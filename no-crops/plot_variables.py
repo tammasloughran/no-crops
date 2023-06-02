@@ -14,7 +14,7 @@ import netCDF4 as nc
 from cdo import Cdo
 
 cdo = Cdo()
-cdo.debug = False
+cdo.debug = True
 
 TILE_FRAC_VAR = 'fld_s03i317'
 WOOD_VAR = 'fld_s03i853'
@@ -126,7 +126,7 @@ def cdo_load_temp_last(input:str, varname:str):
 
 @cdod.cdo_seltimestep('-240/-1')
 @cdod.cdo_mulc('86.4') # kg s-1 to tonnes day-1
-@cdod.cdo_mul(input2='land_areas.nc')
+@cdod.cdo_mul(input2='land_areas.nc') # These variables are gid cell level. Mul by land area.
 @cdod.cdo_timmean
 def cdo_load_temp_last2(input:str, varname:str):
     ncfile = cdo.copy(input=input, returnCdf=True, options='-L')
