@@ -44,6 +44,15 @@ EXAMPLE_FLIE = f'{ARCHIVE_DIR}/GWL-NoCrops-B2030/cLeaf_GWL-NoCrops-B2030.nc'
 G_IN_PG = 10**15
 DPI = 200
 LAST20 = str(-20*12)
+AREAS = {
+        2030:18.1009296255243,
+        2035:18.5102451089476,
+        2040:18.8206654411379,
+        2045:19.0341092768441,
+        2050:19.1879076475696,
+        2055:19.2972290873656,
+        2060:19.3282618017131,
+        }
 
 load_from_npy = True
 
@@ -67,6 +76,8 @@ for exp in EXPERIMENTS.values():
             input=f'{RAW_NOCROP_DIR}/{exp}/history/atm/netCDF/{exp}.pa-050101_mon.nc',
             output=f'data/frac_{exp}.nc',
             )
+
+forestation_factor = {year:AREAS[2030]/fo for year,fo in AREAS.items()}
 
 data = {}
 data_tmean = {}
@@ -132,7 +143,10 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     ## Plot the difference
     plt.figure(1)
     years = np.linspace(0, 102-(1/12), 102*12)
-    plt.plot(years, cLand_diff.squeeze()/G_IN_PG, label=exp) # [Pg(C)]
+    #for year in AREAS.keys():
+    #    if str(year) in exp:
+    #        factor = forestation_factor[year]
+    plt.plot(years, cLand_diff.squeeze()/G_IN_PG*factor, label=exp) # [Pg(C)]
     plt.xlabel('Years')
     plt.ylabel('$\Delta$ cLand [Pg(C)]')
     plt.xlim(left=0, right=102)
@@ -157,9 +171,26 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     plt.title('No crop (2030) - global warming level (2030)')
     plt.savefig('plots/cLand_last20.png', dpi=DPI)
 
+    # Plot all the carbon pools.
     plt.figure(3)
     for v in VARIABLES.keys():
         plt.plot(data[nocrop_exp][v].squeeze() - data[gwl_exp][v].squeeze(), label=v)
     plt.legend()
+
+    # Plot the temporal anomaly.
+    if nocrop_exp=='GWL-NoCrops-B2030':
+        baseline = data[nocrop_exp]['cLand'][0].squeeze()
+    fig4 = plt.figure(4)
+    years = np.linspace(0, 102-(1/12), 102*12)
+    plt.plot(
+            years,
+            (data[nocrop_exp]['cLand'].squeeze() - baseline)/G_IN_PG,
+            label=exp,
+            ) # [Pg(C)]
+    plt.xlabel('Years')
+    plt.ylabel('cLand anomaly [Pg(C)]')
+    plt.xlim(left=0, right=102)
+    plt.ylim(bottom=0, top=200)
+    plt.legend(frameon=False)
 plt.show()
 
