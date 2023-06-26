@@ -22,6 +22,7 @@ NOCROP_ARCHIVE_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
 PROCESSED_NOCROP_DIR = '/g/data/p66/tfl561/archive_data'
 EXPERIMENTS = [
         'esm-esm-piNoCrops',
+        'esm-esm-piNoCrops-2',
         'PI-EDC-01',
         ]
 UM_DATA = 'history/atm/netCDF'
@@ -72,6 +73,8 @@ PI_DIR = '/g/data/p73/archive/CMIP6/ACCESS-ESM1-5/PI-EDC-01/history/atm/netCDF'
 LAND_FRAC = '/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/esm-piControl/r1i1p1f1' \
         '/fx/sftlf/gn/latest/sftlf_fx_ACCESS-ESM1-5_esm-piControl_r1i1p1f1_gn.nc'
 NYEARS = 100
+
+load_cdo = False
 
 
 def pretty_units(units:str)->str:
@@ -165,7 +168,7 @@ def nc_selvar(filename:str, varname:str, outfile:str)->None:
 
 
 if __name__=='__main__':
-    # Calculate tile areas.
+    # Calculate tile areas for the no crops experiment.
     exp = 'esm-esm-piNoCrops'
     cdo.gridarea(input=LAND_FRAC, output='cell_area.nc')
     cdo_get_land_areas(input=LAND_FRAC, output='land_areas.nc')
@@ -173,18 +176,38 @@ if __name__=='__main__':
     # Load the variables for the no-crop experiment.
     no_crops = {}
     var_units = {}
-    for var in NOCROPS_VARIABLES:
-        files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}_*.nc'))
-        if var in ['gpp','npp','ra','rh']:
-            no_crops[var], var_units[var] = cdo_load_global_sum(
-                    input='[ '+' '.join(files)+' ]',
-                    varname=var,
-                    )
-        else: # Load the other variables as globam mean.
-            no_crops[var], var_units[var] = cdo_load_global_mean(
-                    input='[ '+' '.join(files)+' ]',
-                    varname=var,
-                    )
+    for exp in ['esm-esm-piNoCrops','esm-esm-piNoCrops-2']:
+        if exp=='esm-esm-piNoCrops':
+            e = 1
+        else:
+            e = 2
+        no_crops[e] = {}
+        for var in NOCROPS_VARIABLES:
+            files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}_*.nc'))
+            if load_cdo:
+                if '2' in exp and var in ['hfss','hfls','ra','rss','rls','mrso','clt','gpp','npp']:
+                    continue
+                print('getting ', exp, var)
+                if var in ['gpp','npp','ra','rh']:
+                    no_crops[e][var], var_units[var] = cdo_load_global_sum(
+                            input='[ '+' '.join(files)+' ]',
+                            varname=var,
+                            )
+                else: # Load the other variables as globam mean.
+                    no_crops[e][var], var_units[var] = cdo_load_global_mean(
+                            input='[ '+' '.join(files)+' ]',
+                            varname=var,
+                            )
+                np.save(f'data/{var}_{exp}.npy', no_crops[e][var].data)
+                with open(f'data/{var}_units.txt', 'w') as f: f.write(var_units[var])
+                f.close()
+            else:
+                if '2' in exp and var in ['hfss','hfls','ra','rss','rls','mrso','clt','gpp','npp']:
+                    continue
+                no_crops[e][var] = np.load(f'data/{var}_{exp}.npy')
+                with open(f'data/{var}_units.txt', 'r') as f: var_units[var] = f.read()
+                f.close()
+
 
     # PI-EDC-01.pa-052304_mon.nc
     # Recreate the land areas for the pre-industrial simulation.
@@ -194,14 +217,25 @@ if __name__=='__main__':
     # Load the pre-industrial variables according to the relevant table.
     pi_data = {}
     for var in NOCROPS_VARIABLES:
-        files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}_*.nc'))
-        if var in ['gpp','npp','ra','rh']:
-            pi_data[var], _ = cdo_load_global_sum(input='[ '+' '.join(files)+' ]', varname=var)
+        files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}*.nc'))
+        if load_cdo:
+            if var in ['gpp','npp','ra','rh']:
+                pi_data[var], _ = cdo_load_global_sum(
+                        input='[ '+' '.join(files)+' ]',
+                        varname=var,
+                        )
+            else:
+                pi_data[var], _ = cdo_load_global_mean(
+                        input='[ '+' '.join(files)+' ]',
+                        varname=var,
+                        )
+            np.save(f'data/{var}_{exp}.npy', pi_data[var].data)
         else:
-            pi_data[var], _ = cdo_load_global_mean(input='[ '+' '.join(files)+' ]', varname=var)
+            pi_data[var] = np.load(f'data/{var}_{exp}.npy')
 
     # Units
-    no_crops['pr'] *= 60*60*24
+    no_crops[1]['pr'] *= 60*60*24
+    no_crops[2]['pr'] *= 60*60*24
     pi_data['pr'] *= 60*60*24
     var_units['pr'] = 'kg m-2 day-1'
     var_units['gpp'] = 'tonnes day-1'
@@ -213,12 +247,24 @@ if __name__=='__main__':
     for key,val in var_units.items():
         var_units[key] = pretty_units(val)
 
+    # Plot the data.
     for var in NOCROPS_VARIABLES:
         plt.figure()
-        difference = no_crops[var] - pi_data[var]
-        yearly = difference.reshape((NYEARS,12)).mean(axis=1)
-        plt.plot(np.linspace(0, NYEARS+1, NYEARS*12, endpoint=False), difference)
-        plt.plot(range(1, NYEARS+1), yearly, color='navy')
+        for e in [1,2]:
+            if e==2 and var in ['hfss','hfls','ra','rss','rls','mrso','clt','gpp','npp']:
+                continue
+            if e==2:
+                ref = pi_data[var][0:600]
+                nyears = 50
+                color = 'dimgray'
+            else:
+                ref = pi_data[var]
+                nyears = 100
+                color = 'navy'
+            difference = no_crops[e][var] - ref
+            yearly = difference.reshape((nyears,12)).mean(axis=1)
+            if e==1: plt.plot(np.linspace(0, nyears+1, nyears*12, endpoint=False), difference)
+            plt.plot(range(1, nyears+1), yearly, color=color)
         plt.hlines(y=0, xmin=0, xmax=NYEARS+1, colors='black')
         plt.title(TITLE[var])
         plt.xlabel('Time (year)')
@@ -227,9 +273,10 @@ if __name__=='__main__':
         else:
             plt.ylabel(var_units[var])
         plt.xlim(left=0, right=NYEARS+1)
-        plt.savefig(f'plots/{var}_global_esm-piControl_esm-piNoCrops_difference.svg')
-    #plt.show()
+        plt.savefig(f'plots/{var}_global_esm-piControl_esm-piNoCrops_difference.png')
+        plt.show()
 
+    # Map of end of century
     no_crops_last = {}
     pi_last = {}
     for var in NOCROPS_VARIABLES:
