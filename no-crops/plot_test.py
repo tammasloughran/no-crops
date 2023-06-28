@@ -3,7 +3,6 @@
 import glob
 import os
 
-import ipdb
 import numpy as np
 import cdo_decorators as cdod
 import matplotlib.pyplot as plt
@@ -22,6 +21,7 @@ NOCROP_ARCHIVE_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
 PROCESSED_NOCROP_DIR = '/g/data/p66/tfl561/archive_data'
 EXPERIMENTS = [
         'esm-esm-piNoCrops',
+        'esm-esm-piNoCrops-2'
         #'old_esm-piNoCrops',
         #'esm-esm-pre-industrial',
         ]
@@ -59,6 +59,7 @@ PI_DIR = '/g/data/p73/archive/CMIP6/ACCESS-ESM1-5/PI-EDC-01/history/atm/netCDF'
 LAND_FRAC = '/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/esm-piControl/r1i1p1f1' \
         '/fx/sftlf/gn/latest/sftlf_fx_ACCESS-ESM1-5_esm-piControl_r1i1p1f1_gn.nc'
 
+load_cdo = True
 
 @cdod.cdo_selvar(TILE_FRAC_VAR)
 @cdod.cdo_mul(input1='cell_area.nc')
@@ -75,17 +76,19 @@ def cdo_get_tile_areas(input:str, output:str)->None:
 @cdod.cdo_fldsum
 #@cdod.cdo_vertsum # I've decided to do this in python, because I want the pools on PFTs.
 def cdo_load_global_sum(input:str, varname:str)->np.ndarray:
-    """Global sum using cdo and load.
+    """Global sum using cdo and load data into numpy arrays.
     """
     return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
 
 
 @cdod.cdo_cat(input2='')
-@cdod.cdo_mul(input2=LAND_FRAC)
-@cdod.cdo_divc('1e15')
+@cdod.cdo_mul(input2=LAND_FRAC) # From m-2 to -
+@cdod.cdo_divc('100') # From % to frac
+@cdod.cdo_muldpm # From s-1 to mon-1
+@cdod.cdo_divc('1e12') # From kg to Pg
 @cdod.cdo_fldsum
 def cdo_load_global_sum2(input:str, varname:str)->np.ndarray:
-    """Global sum using cdo and load for rh.
+    """Global sum using cdo and load for carbon flux variables.
     """
     return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
 
@@ -133,39 +136,6 @@ def nc_selvar(filename:str, varname:str, outfile:str)->None:
 
 
 if __name__=='__main__':
-    # Calculate tile areas.
-    exp = 'esm-esm-piNoCrops'
-    example_file = f'{NOCROP_ARCHIVE_DIR}/{exp}/{UM_DATA}/{exp}.pa-010101_mon.nc'
-    cdo.gridarea(input=example_file, output='cell_area.nc')
-    cdo_get_tile_areas(input=example_file, output='tile_areas.nc')
-
-    # Load the variables for the no-crop experiment.
-    no_crops = {}
-    for var in NOCROPS_VARIABLES:
-        files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}_*.nc'))
-        if not (var=='tas' or var=='rh'):
-            no_crops[var] = cdo_load_global_sum(
-                    input='[ '+' '.join(files)+' ]',
-                    varname=var,
-                    )
-        elif var=='rh':
-            no_crops[var] = cdo_load_global_sum2(
-                    input='[ '+' '.join(files)+' ]',
-                    varname=var,
-                    )
-        else: # Load the sureface temperature variable as a global mean.
-            no_crops[var] = cdo_load_global_mean(
-                    input='[ '+' '.join(files)+' ]',
-                    varname=var,
-                    )
-
-    # Aggregate to the CMIP variables for cSoil and cLitter.
-    #no_crops['cSoil'] = no_crops['cMicrobial'] + no_crops['cSlow'] + no_crops['cPassive']
-    #no_crops['cLitter'] = no_crops['cMetabolic'] + no_crops['cStructural'] + \
-    #        no_crops['cCoarseWoodyDebris']
-    #no_crops['cCwd'] = no_crops['cCoarseWoodyDebris']
-
-
     # PI-EDC-01.pa-052304_mon.nc
     # Recreate the tile areas for the pre-industrial simulation.
     exp = 'PI-EDC-01'
@@ -175,36 +145,94 @@ if __name__=='__main__':
     # Load the pre-industrial variables according to the relevant table.
     pi_data = {}
     for var in NOCROPS_VARIABLES:
-        files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}_*.nc'))
-        if not (var=='tas' or var=='rh'):
-            pi_data[var] = cdo_load_global_sum(
-                    input='[ '+' '.join(files)+' ]',
-                    varname=var,
-                    )
-        elif var=='rh':
-            pi_data[var] = cdo_load_global_sum2(
-                    input='[ '+' '.join(files)+' ]',
-                    varname=var,
-                    )
+        if load_cdo==True:
+            files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}*.nc'))
+            if not (var=='tas' or var=='rh'):
+                pi_data[var] = cdo_load_global_sum(
+                        input='[ '+' '.join(files)+' ]',
+                        varname=var,
+                        )
+            elif var=='rh':
+                pi_data[var] = cdo_load_global_sum2(
+                        input='[ '+' '.join(files)+' ]',
+                        varname=var,
+                        )
+            else:
+                pi_data[var] = cdo_load_global_mean(
+                        input='[ '+' '.join(files)+' ]',
+                        varname=var,
+                        )
+            np.save(f'data/{var}_{exp}_test.npy', pi_data[var].data)
         else:
-            pi_data[var] = cdo_load_global_mean(
-                    input='[ '+' '.join(files)+' ]',
-                    varname=var,
-                    )
+            pi_data[var] = np.load(f'data/{var}_{exp}_test.npy')
 
+
+    # Calculate tile areas. They are the same for both pre-industrial ensemble members.
+    exp = 'esm-esm-piNoCrops'
+    example_file = f'{NOCROP_ARCHIVE_DIR}/{exp}/{UM_DATA}/{exp}.pa-010101_mon.nc'
+    cdo.gridarea(input=example_file, output='cell_area.nc')
+    cdo_get_tile_areas(input=example_file, output='tile_areas.nc')
+
+    # Load the variables for the no-crop experiment.
+    no_crops = {}
+    for e in [1,2]:
+        no_crops[e] = {}
+        if e==1:
+            exp = 'esm-esm-piNoCrops'
+        else:
+            exp = 'esm-esm-piNoCrops-2'
+        for var in NOCROPS_VARIABLES:
+            if load_cdo==True:
+                files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}*.nc'))
+                if not (var=='tas' or var=='rh'):
+                    no_crops[e][var] = cdo_load_global_sum(
+                            input='[ '+' '.join(files)+' ]',
+                            varname=var,
+                            )
+                elif var=='rh':
+                    no_crops[e][var] = cdo_load_global_sum2(
+                            input='[ '+' '.join(files)+' ]',
+                            varname=var,
+                            )
+                else: # Load the sureface temperature variable as a global mean.
+                    no_crops[e][var] = cdo_load_global_mean(
+                            input='[ '+' '.join(files)+' ]',
+                            varname=var,
+                            )
+                np.save(f'data/{var}_{exp}_test.npy', no_crops[e][var].data)
+            else:
+                no_crops[e][var] = np.load(f'data/{var}_{exp}_test.npy')
+
+
+    # Aggregate to the CMIP variables for cSoil and cLitter.
+    #no_crops['cSoil'] = no_crops['cMicrobial'] + no_crops['cSlow'] + no_crops['cPassive']
+    #no_crops['cLitter'] = no_crops['cMetabolic'] + no_crops['cStructural'] + \
+    #        no_crops['cCoarseWoodyDebris']
+    #no_crops['cCwd'] = no_crops['cCoarseWoodyDebris']
+
+
+    def yearly_mean(data:np.ndarray):
+        """Calculate a yearly mean on a numpy array.
+        The first dimension must be time and divisible by 12.
+        """
+        toshape = list(data.shape)
+        toshape.pop(0)
+        toshape.insert(0, 12)
+        toshape.insert(0, int(data.shape[0]/12))
+        return data.reshape(toshape).mean(axis=1)
+
+
+    # Plot the carbon pools.
     for var in NOCROPS_VARIABLES:
         plt.figure()
-        if not (var=='tas' or var=='rh'):
-            plt.plot(no_crops[var].sum(axis=1), label='esm-piNoCrops')
-            plt.plot(pi_data[var].sum(axis=1), label='esm-piControl')
-        elif var=='rh':
-            nocrop = no_crops[var]#.reshape(12,50).mean(axis=0)
-            pidata = pi_data[var]#.reshape(12,50).mean(axis=0)
-            plt.plot(nocrop, label='esm-piNoCrops')
-            plt.plot(pidata, label='esm-piControl')
+        if var[0]=='c':
+            plt.plot(yearly_mean(no_crops[1][var].sum(axis=1)), label='esm-piNoCrops')
+            plt.plot(yearly_mean(no_crops[2][var].sum(axis=1)), label='esm-piNoCrops-2')
+            plt.plot(yearly_mean(pi_data[var].sum(axis=1)), label='esm-piControl')
         else:
-            plt.plot(no_crops[var], label='esm-piNoCrops')
-            plt.plot(pi_data[var], label='esm-piControl')
+            plt.plot(yearly_mean(no_crops[1][var]), label='esm-piNoCrops')
+            plt.plot(yearly_mean(no_crops[2][var]), label='esm-piNoCrops-2')
+            plt.plot(yearly_mean(pi_data[var]), label='esm-piControl')
         plt.title(var)
         plt.xlabel('Time (months)')
         if var=='tas':
@@ -212,6 +240,7 @@ if __name__=='__main__':
         else:
             plt.ylabel('Pg C')
         plt.legend()
+        plt.xlim(left=0)
         plt.savefig(f'plots/{var}_timeseries.png', dpi=200)
     plt.show()
 
@@ -226,6 +255,8 @@ if __name__=='__main__':
             7:'Tundra',
             8:'C3 Crop',
             }
+
+    ipdb.set_trace()
 
     # Plot the difference for all PFTs.
     for var in NOCROPS_VARIABLES:
@@ -243,14 +274,15 @@ if __name__=='__main__':
         plt.savefig(f'plots/{var}_difference_pfts.png', dpi=200)
     plt.show()
 
-    exp = 'esm-esm-piNoCrops'
-    files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}_*.nc'))
+    exp = 'esm-esm-piNoCrops-2'
+    files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}*.nc'))
     no_crops_temp = cdo_load_temp_last(input=files[-1], varname='tas')
     exp = 'PI-EDC-01'
-    files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}_*.nc'))
+    files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}*.nc'))
     pi_temp = cdo_load_temp_last(input=files[-1], varname='tas')
 
-    ncin = nc.Dataset(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}_0101-0150.nc')
+    #ncin = nc.Dataset(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}_0101-0150.nc')
+    ncin = nc.Dataset(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}.nc')
     lats = ncin.variables['lat_v'][:]
     lons = ncin.variables['lon_u'][:]
     # pcolormesh expects +1 lon.
