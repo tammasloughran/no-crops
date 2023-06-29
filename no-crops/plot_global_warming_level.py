@@ -30,7 +30,7 @@ EXPERIMENTS = {
         'PI-GWL-t6':'GWL-NoCrops-B2030',
         'PI-GWL-B2035':'GWL-NoCrops-B2035',
         #'PI-GWL-B2040':'GWL-NoCrops-B2040',
-        #'PI-GWL-B2045':'GWL-NoCrops-B2045',
+        'PI-GWL-B2045':'GWL-NoCrops-B2045',
         #'PI-GWL-B2050':'GWL-NoCrops-B2050',
         #'PI-GWL-B2055':'GWL-NoCrops-B2055',
         'PI-GWL-B2060':'GWL-NoCrops-B2060',
@@ -44,6 +44,15 @@ EXAMPLE_FLIE = f'{ARCHIVE_DIR}/GWL-NoCrops-B2030/cLeaf_GWL-NoCrops-B2030.nc'
 G_IN_PG = 10**15
 DPI = 200
 LAST20 = str(-20*12)
+COLORS = {
+        'GWL-NoCrops-B2030':'#62EA00',
+        'GWL-NoCrops-B2035':'#24CC00',
+        'GWL-NoCrops-B2040':'#079F2A',
+        'GWL-NoCrops-B2045':'#00786B',
+        'GWL-NoCrops-B2050':'#055992',
+        'GWL-NoCrops-B2055':'#1140AB',
+        'GWL-NoCrops-B2060':'#1E31B6',
+        }
 
 load_from_npy = True
 
@@ -132,7 +141,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     ## Plot the difference
     plt.figure(1)
     years = np.linspace(0, 102-(1/12), 102*12)
-    plt.plot(years, cLand_diff.squeeze()/G_IN_PG, label=exp) # [Pg(C)]
+    plt.plot(years, cLand_diff.squeeze()/G_IN_PG, color=COLORS[nocrop_exp], label=exp) # [Pg(C)]
     plt.xlabel('Years')
     plt.ylabel('$\Delta$ cLand [Pg(C)]')
     plt.xlim(left=0, right=102)
@@ -141,7 +150,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     #plt.savefig(f'plots/cLand_gloabl_sum.png', dpi=DPI)
 
     # Plot the difference for the last 20 years
-    fig2 = plt.figure(2)
+    fig2 = plt.figure()
     ax = fig2.add_subplot(1, 1, 1, projection=ccrs.Robinson())
     colors = ax.pcolormesh(
             lons,
@@ -154,12 +163,22 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
             )
     ax.coastlines()
     plt.colorbar(colors, label='$\Delta$ cLand [Pg(C)]', orientation='horizontal', pad=0.05)
-    plt.title('No crop (2030) - global warming level (2030)')
+    plt.title(f'{gwl_exp} - {nocrop_exp}')
     plt.savefig('plots/cLand_last20.png', dpi=DPI)
 
     plt.figure(3)
     for v in VARIABLES.keys():
-        plt.plot(data[nocrop_exp][v].squeeze() - data[gwl_exp][v].squeeze(), label=v)
-    plt.legend()
+        plot_this = data[nocrop_exp][v].squeeze() - data[gwl_exp][v].squeeze()
+        plt.plot(
+                years,
+                plot_this/G_IN_PG,
+                color=COLORS[nocrop_exp],
+                label=v,
+                )
+    plt.xlim(left=0, right=102)
+    plt.xlabel('Years')
+    plt.ylabel('$\Delta$ C [Pg(C)]')
+    plt.title("Plant functional type carbon pools")
+    #plt.legend()
 plt.show()
 
