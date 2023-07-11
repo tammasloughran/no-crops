@@ -59,7 +59,7 @@ PI_DIR = '/g/data/p73/archive/CMIP6/ACCESS-ESM1-5/PI-EDC-01/history/atm/netCDF'
 LAND_FRAC = '/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/esm-piControl/r1i1p1f1' \
         '/fx/sftlf/gn/latest/sftlf_fx_ACCESS-ESM1-5_esm-piControl_r1i1p1f1_gn.nc'
 
-load_cdo = True
+load_cdo = False
 
 @cdod.cdo_selvar(TILE_FRAC_VAR)
 @cdod.cdo_mul(input1='cell_area.nc')

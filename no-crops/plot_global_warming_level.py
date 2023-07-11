@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 # Plot the difference of no-crops and with crops for the global warmining level simulations.
+import glob
+import os
+
+import cartopy.crs as ccrs
+import cdo_decorators as cdod
+import ipdb
 import matplotlib.pyplot as plt
 import netCDF4 as nc
 import numpy as np
-import glob
-import os
 from cdo import Cdo
-import cdo_decorators as cdod
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import ipdb
 
 cdo = Cdo()
-cdo.debug = True
+cdo.debug = False
 
 VARIABLES = {
         #'tas':'fld_s03i236',
@@ -29,18 +29,19 @@ VARIABLES = {
 EXPERIMENTS = {
         'PI-GWL-t6':'GWL-NoCrops-B2030',
         'PI-GWL-B2035':'GWL-NoCrops-B2035',
-        #'PI-GWL-B2040':'GWL-NoCrops-B2040',
+        'PI-GWL-B2040':'GWL-NoCrops-B2040',
         'PI-GWL-B2045':'GWL-NoCrops-B2045',
-        #'PI-GWL-B2050':'GWL-NoCrops-B2050',
-        #'PI-GWL-B2055':'GWL-NoCrops-B2055',
+        'PI-GWL-B2050':'GWL-NoCrops-B2050',
+        'PI-GWL-B2055':'GWL-NoCrops-B2055',
         'PI-GWL-B2060':'GWL-NoCrops-B2060',
+        'PI-GWL-B2060_duplicate':'GWL-EqFor-B2060',
         }
 ARCHIVE_DIR = '/g/data/p66/tfl561/archive_data'
 RAW_CMIP_DIR = '/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5'
 RAW_NOCROP_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
 LAND_FRAC_CODE = 'fld_s03i395'
 TILE_FRAC_CODE = 'fld_s03i317'
-EXAMPLE_FLIE = f'{ARCHIVE_DIR}/GWL-NoCrops-B2030/cLeaf_GWL-NoCrops-B2030.nc'
+EXAMPLE_FLIE = f'{ARCHIVE_DIR}/GWL-NoCrops-B2030/cLeaf_GWL-NoCrops-B2030_0500-0700.nc'
 G_IN_PG = 10**15
 DPI = 200
 LAST20 = str(-20*12)
@@ -52,6 +53,7 @@ COLORS = {
         'GWL-NoCrops-B2050':'#055992',
         'GWL-NoCrops-B2055':'#1140AB',
         'GWL-NoCrops-B2060':'#1E31B6',
+        'GWL-EqFor-B2060':'deepskyblue',
         }
 
 load_from_npy = True
@@ -59,12 +61,14 @@ load_from_npy = True
 # Cell area file
 cdo.gridarea(input=EXAMPLE_FLIE, output='data/cell_area.nc')
 
+# Load lats and lons.
 ncfile = nc.Dataset(EXAMPLE_FLIE, 'r')
 lats = ncfile.variables['lat'][:]
 lons = ncfile.variables['lon'][:]
 
 # Create tile frac file for both experiments.
 for exp in EXPERIMENTS.keys():
+    if 'duplicate' in exp: exp = 'PI-GWL-B2060'
     cdo.selvar(
             TILE_FRAC_CODE,
             input=f'{RAW_CMIP_DIR}/{exp}/history/atm/netCDF/{exp}.pa-050101_mon.nc',
@@ -81,6 +85,7 @@ data = {}
 data_tmean = {}
 plt.figure()
 for gwl_exp,nocrop_exp in EXPERIMENTS.items():
+    if 'duplicate' in gwl_exp: gwl_exp = 'PI-GWL-B2060'
     for exp in [gwl_exp, nocrop_exp]:
         print(f"{exp}")
         data[exp] = {}
@@ -111,6 +116,10 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
 
 
         # Load the data.
+        if 'B2030' in exp or 't6' in exp:
+            period = '0500-0700'
+        else:
+            period = '0500-0601'
         if load_from_npy:
             for var in VARIABLES.keys():
                 data[exp][var] = np.load(f'data/{var}_{exp}_global_sum.npy') # [g(C)]
@@ -118,11 +127,14 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
         else:
             for var in VARIABLES.keys():
                 print(f"Loading {var}")
-                data[exp][var] = load_global_sum(var, input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}.nc')
+                data[exp][var] = load_global_sum(
+                        var,
+                        input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
+                        )
                 np.save(f'data/{var}_{exp}_global_sum.npy', data[exp][var].data) # [g(C)]
                 data_tmean[exp][var] = load_last20(
                         var,
-                        input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}.nc',
+                        input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
                         )
                 np.save(f'data/{var}_{exp}_last20.npy', data_tmean[exp][var].data) # [g(C)]
 
@@ -138,18 +150,18 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     cLand_diff = data[nocrop_exp]['cLand'] - data[gwl_exp]['cLand']
     cLand_diff_tmean = data_tmean[nocrop_exp]['cLand'] - data_tmean[gwl_exp]['cLand']
 
-    ## Plot the difference
+    ## Plot the difference time series of cLand.
     plt.figure(1)
-    years = np.linspace(0, 102-(1/12), 102*12)
+    nmonths = cLand_diff.squeeze().shape[0]
+    years = np.linspace(500, 500+nmonths*(1/12), nmonths)
     plt.plot(years, cLand_diff.squeeze()/G_IN_PG, color=COLORS[nocrop_exp], label=exp) # [Pg(C)]
-    plt.xlabel('Years')
-    plt.ylabel('$\Delta$ cLand [Pg(C)]')
-    plt.xlim(left=0, right=102)
+    plt.xlabel('Time (years)')
+    plt.ylabel('$\Delta$ cLand (Pg)')
+    plt.xlim(left=500)
     plt.ylim(bottom=0, top=200)
     plt.legend(frameon=False)
-    #plt.savefig(f'plots/cLand_gloabl_sum.png', dpi=DPI)
 
-    # Plot the difference for the last 20 years
+    # Plot the map of the difference for the last 20 years
     fig2 = plt.figure()
     ax = fig2.add_subplot(1, 1, 1, projection=ccrs.Robinson())
     colors = ax.pcolormesh(
@@ -162,23 +174,55 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
             transform=ccrs.PlateCarree(),
             )
     ax.coastlines()
-    plt.colorbar(colors, label='$\Delta$ cLand [Pg(C)]', orientation='horizontal', pad=0.05)
-    plt.title(f'{gwl_exp} - {nocrop_exp}')
-    plt.savefig('plots/cLand_last20.png', dpi=DPI)
+    plt.colorbar(colors, label='$\Delta$ cLand (Pg)', orientation='horizontal', pad=0.05)
+    plt.title(f'{nocrop_exp} - {gwl_exp}')
+    plt.savefig(f'plots/cLand_{nocrop_exp}_last20.png', dpi=DPI)
 
+    # Plot the difference of all the carbon pools.
     plt.figure(3)
     for v in VARIABLES.keys():
+        nmonths = cLand_diff.squeeze().shape[0]
+        years = np.linspace(500, 500+nmonths*(1/12), nmonths)
         plot_this = data[nocrop_exp][v].squeeze() - data[gwl_exp][v].squeeze()
         plt.plot(
                 years,
                 plot_this/G_IN_PG,
                 color=COLORS[nocrop_exp],
-                label=v,
+                #label=v,
                 )
-    plt.xlim(left=0, right=102)
-    plt.xlabel('Years')
-    plt.ylabel('$\Delta$ C [Pg(C)]')
-    plt.title("Plant functional type carbon pools")
-    #plt.legend()
+    plt.xlim(left=500)
+    plt.xlabel('Time (years)')
+    plt.ylabel('$\Delta$ C (Pg)')
+    plt.annotate('cWood', (675,125))
+    plt.annotate('cRoot', (675,40))
+    plt.annotate('cCWD', (675,20))
+    plt.annotate('cStructural', (675,10))
+    plt.annotate('cMicrobial', (675,-10))
+    plt.annotate('cSlow', (675,-25))
+    plt.title("Carbon pools")
+
+    # Plot the map of the difference for the last 20 years in Australia.
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
+    ax.set_extent([110,155,-45,-10], crs=ccrs.PlateCarree())
+    colors = ax.pcolormesh(
+            lons,
+            lats,
+            cLand_diff_tmean.squeeze()/G_IN_PG,
+            cmap='seismic',
+            vmin=-0.6,
+            vmax=0.6,
+            transform=ccrs.PlateCarree(),
+            )
+    ax.coastlines()
+    plt.colorbar(colors, label='$\Delta$ cLand (Pg)]', orientation='horizontal', pad=0.05)
+    plt.title(f'{nocrop_exp} - {gwl_exp}')
+    plt.savefig(f'plots/cLand_{nocrop_exp}_australia_last20.png', dpi=DPI)
+
+# Save figures.
+plt.figure(3)
+plt.savefig(f'plots/cpools_gloabl_sum.png', dpi=DPI)
+plt.figure(1)
+plt.savefig(f'plots/cLand_GWL_gloabl_sum.png', dpi=DPI)
 plt.show()
 
