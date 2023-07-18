@@ -1,0 +1,128 @@
+% Draft manuscript on forestation sensitivity experiments.
+% Note: Figures are plotted using .png files for now since SVG rendering is very
+% slow for LaTeX. At a later date I will change the figures to .svg files. For example:
+%\includesvg[width=\linewidth]{../plots/cVeg_aus_anom.svg}
+
+% Preamble.
+\documentclass[]{article}
+\usepackage[a4paper, total={170mm,257mm}, left=20mm, top=20mm,]{geometry}
+\usepackage{svg} % Use SVGs only for final draft.
+\usepackage{float} % Allows the [H] option meaning "place figure here and only here"
+\usepackage[section]{placeins} % Defines /FloatBarrier so that figures can't move.
+\usepackage{subcaption} % Allows subfigures and captions
+\usepackage{lineno} % Enable line numbers.
+\usepackage{textcomp}
+\usepackage[style=authoryear]{biblatex}
+\usepackage{amsmath}
+%\addbibresource{forestation_sensitivity_experiments.bib}
+\setlength{\parindent}{1cm}
+\linenumbers
+
+\title{Sensitivity experiments of Australia forestation in ACCESS-ESM1.5 under several global warming levels}
+\author{Tammas Loughran et al.}
+
+\begin{document}
+
+\maketitle
+
+\begin{center}
+    \Large
+    \vspace{0.9cm}
+    \textbf{Abstract}
+\end{center}
+
+[Placeholder]
+
+\raggedright
+\parindent=.35in % Setting raggedright removes paragraph indents. This puts them back.
+
+\section{Introduction}
+
+The CO$_2$ removal potential and climate mitigation of forestation is still poorly understood for Australia.
+Integrated assessment models produced a plausible scenario of global forestation for CMIP6 but these scenarios do not have any additional forest area expansion in Australia and are therefore unsuitable for answering the question.
+
+We need additional simulations to answer these questions.
+Furthermore, we do not have projections under stanble climates at different global warming levels that are consistent with the Paris agreement targets.
+In fact, how ACCESS responds to forestation in general is still poorly understood and fundamental land-use change experiments are needed.
+
+\section{Methods}
+
+Description of ACCESS. where are dominant PFTs
+Description of crop removal and replacement with trees
+
+\subsection{Experiments}
+
+\begin{itemize}
+\item piControl
+\item piControl-no-crops
+\item GWL branching points
+\item GWL branching points without crops
+\end{itemize}
+
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \includegraphics[width=\linewidth]{../plots/crop_to_forest1.png}
+    \end{subfigure}
+    \caption{replace crops}
+    \label{fig:to_forest}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \includegraphics[width=\linewidth]{../plots/nearest_forest.png}
+    \end{subfigure}
+    \caption{replace crops}
+    \label{fig:nearest_forest}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \includegraphics[width=\linewidth]{../plots/minimum.png}
+    \end{subfigure}
+    \caption{replace crops}
+    \label{fig:minimum}
+\end{figure}
+
+\subsection{Statistical methods}
+
+[Placeholder]
+
+\section{Results}
+
+[Placeholder]
+
+\subsection{Carbon cycle}
+
+[Placeholder]
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \includesvg[width=\linewidth]{../plots/co2_global_warming_level_no_crops.svg}
+    \end{subfigure}
+    \caption{replace crops}
+    \label{fig:global_co2}
+\end{figure}
+
+\subsection{Climate}
+
+[Placeholder]
+
+\section{Discussion}
+
+\subsection{Soil carbon decrease}
+
+\section{Conclusion}
+
+[Placeholder]
+
+%\printbibliography
+
+\section{Supplementary Material}
+\setcounter{figure}{0}
+
+
+\end{document}
+
