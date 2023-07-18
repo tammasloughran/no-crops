@@ -44,7 +44,7 @@ TILE_FRAC_CODE = 'fld_s03i317'
 EXAMPLE_FLIE = f'{ARCHIVE_DIR}/GWL-NoCrops-B2030/cLeaf_GWL-NoCrops-B2030_0500-0700.nc'
 G_IN_PG = 10**15
 DPI = 200
-LAST20 = str(-20*12)
+LAST30 = str(-30*12)
 COLORS = {
         'GWL-NoCrops-B2030':'#62EA00',
         'GWL-NoCrops-B2035':'#24CC00',
@@ -56,7 +56,7 @@ COLORS = {
         'GWL-EqFor-B2060':'deepskyblue',
         }
 
-load_from_npy = True
+load_from_npy = False
 
 # Cell area file
 cdo.gridarea(input=EXAMPLE_FLIE, output='data/cell_area.nc')
@@ -93,8 +93,8 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
 
 
         @cdod.cdo_mul(input2=f'data/frac_{exp}.nc') # Multiply by tile fractions.
-        @cdod.cdo_mul(input2='data/cell_area.nc') # Multiply by call area.
-        @cdod.cdo_vertsum # Plant functional type sum.
+        @cdod.cdo_mul(input2='data/cell_area.nc') # Multiply by cell area.
+        @cdod.cdo_vertsum(weights='FALSE') # Plant functional type sum.
         @cdod.cdo_fldsum # Global sum.
         def load_global_sum(var, input:str)->np.ma.MaskedArray:
             """Load global sum of a carbon pool variable.
@@ -104,9 +104,9 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
 
 
         @cdod.cdo_mul(input2=f'data/frac_{exp}.nc') # Multiply by tile fractions.
-        @cdod.cdo_mul(input2='data/cell_area.nc') # Multiply by call area.
-        @cdod.cdo_vertsum # Plant functional type sum.
-        @cdod.cdo_seltimestep(f'{LAST20}/-1') # last 20 years
+        @cdod.cdo_mul(input2='data/cell_area.nc') # Multiply by cell area.
+        @cdod.cdo_vertsum(weights='FALSE') # Plant functional type sum.
+        @cdod.cdo_seltimestep(f'{LAST30}/-1') # last 20 years
         @cdod.cdo_timmean # Temporal average
         def load_last20(var, input:str)->np.ma.MaskedArray:
             """Load last 20 year mean of a carbon pool variable.
