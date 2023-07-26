@@ -69,7 +69,7 @@ load_cdo = False
 plot_as_percent = True
 
 @cdod.cdo_selvar(TILE_FRAC_VAR)
-@cdod.cdo_mul(input1='cell_area.nc')
+@cdod.cdo_mul(input1='data/cell_area.nc')
 @cdod.cdo_mul(input2=LAND_FRAC)
 @cdod.cdo_divc('100')
 @cdod.cdo_ifthen(input1=LAND_FRAC)
@@ -79,7 +79,7 @@ def cdo_get_tile_areas(input:str, output:str)->None:
 
 @cdod.cdo_cat(input2='')
 @cdod.cdo_divc('1e15')
-@cdod.cdo_mul(input2='tile_areas.nc')
+@cdod.cdo_mul(input2='data/tile_areas.nc')
 @cdod.cdo_fldsum
 #@cdod.cdo_vertsum # I've decided to do this in python, because I want the pools on PFTs.
 def cdo_load_global_sum(input:str, varname:str)->np.ndarray:
@@ -89,7 +89,7 @@ def cdo_load_global_sum(input:str, varname:str)->np.ndarray:
 
 
 @cdod.cdo_cat(input2='')
-@cdod.cdo_mul(input2='cell_area.nc')
+@cdod.cdo_mul(input2='data/cell_area.nc')
 @cdod.cdo_mul(input2=LAND_FRAC) # From m-2 to -
 @cdod.cdo_divc('100') # From % to frac
 @cdod.cdo_mulc('86400')
@@ -149,7 +149,7 @@ if __name__=='__main__':
     # Recreate the tile areas for the pre-industrial simulation.
     exp = 'PI-EDC-01'
     example_file = f'{PI_DIR}/PI-EDC-01.pa-010101_mon.nc'
-    cdo_get_tile_areas(input=example_file, output='tile_areas.nc')
+    cdo_get_tile_areas(input=example_file, output='data/tile_areas.nc')
 
     # Load the pre-industrial variables according to the relevant table.
     pi_data = {}
@@ -178,8 +178,8 @@ if __name__=='__main__':
     # Calculate tile areas. They are the same for both pre-industrial ensemble members.
     exp = 'esm-esm-piNoCrops'
     example_file = f'{NOCROP_ARCHIVE_DIR}/{exp}/{UM_DATA}/{exp}.pa-010101_mon.nc'
-    cdo.gridarea(input=example_file, output='cell_area.nc')
-    cdo_get_tile_areas(input=example_file, output='tile_areas.nc')
+    cdo.gridarea(input=example_file, output='data/cell_area.nc')
+    cdo_get_tile_areas(input=example_file, output='data/tile_areas.nc')
 
     # Load the variables for the no-crop experiment.
     no_crops = {}

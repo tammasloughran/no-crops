@@ -89,7 +89,7 @@ def pretty_units(units:str)->str:
     return units
 
 
-@cdod.cdo_mul(input1='cell_area.nc')
+@cdod.cdo_mul(input1='data/cell_area.nc')
 @cdod.cdo_divc('100')
 @cdod.cdo_ifthen(input1=LAND_FRAC)
 def cdo_get_land_areas(input:str, output:str)->None:
@@ -98,7 +98,7 @@ def cdo_get_land_areas(input:str, output:str)->None:
 
 @cdod.cdo_cat(input2='')
 @cdod.cdo_mulc('86.4') # kg s-1 to tonnes day-1
-@cdod.cdo_mul(input2='land_areas.nc')
+@cdod.cdo_mul(input2='data/land_areas.nc')
 @cdod.cdo_fldsum
 def cdo_load_global_sum(input:str, varname:str)->np.ndarray:
     """Global sum using cdo and load.
@@ -129,7 +129,7 @@ def cdo_load_temp_last(input:str, varname:str):
 
 @cdod.cdo_seltimestep('-240/-1')
 @cdod.cdo_mulc('86.4') # kg s-1 to tonnes day-1
-@cdod.cdo_mul(input2='land_areas.nc') # These variables are gid cell level. Mul by land area.
+@cdod.cdo_mul(input2='data/land_areas.nc') # These variables are gid cell level. Mul by land area.
 @cdod.cdo_timmean
 def cdo_load_temp_last2(input:str, varname:str):
     ncfile = cdo.copy(input=input, returnCdf=True, options='-L')
@@ -170,8 +170,8 @@ def nc_selvar(filename:str, varname:str, outfile:str)->None:
 if __name__=='__main__':
     # Calculate tile areas for the no crops experiment.
     exp = 'esm-esm-piNoCrops'
-    cdo.gridarea(input=LAND_FRAC, output='cell_area.nc')
-    cdo_get_land_areas(input=LAND_FRAC, output='land_areas.nc')
+    cdo.gridarea(input=LAND_FRAC, output='data/cell_area.nc')
+    cdo_get_land_areas(input=LAND_FRAC, output='data/land_areas.nc')
 
     # Load the variables for the no-crop experiment.
     no_crops = {}
@@ -212,7 +212,7 @@ if __name__=='__main__':
     # PI-EDC-01.pa-052304_mon.nc
     # Recreate the land areas for the pre-industrial simulation.
     exp = 'PI-EDC-01'
-    cdo_get_land_areas(input=LAND_FRAC, output='land_areas.nc')
+    cdo_get_land_areas(input=LAND_FRAC, output='data/land_areas.nc')
 
     # Load the pre-industrial variables according to the relevant table.
     pi_data = {}
