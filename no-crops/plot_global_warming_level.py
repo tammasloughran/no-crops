@@ -56,7 +56,7 @@ COLORS = {
         'GWL-EqFor-B2060':'deepskyblue',
         }
 
-load_from_npy = False
+load_from_npy = True
 
 # Cell area file
 cdo.gridarea(input=EXAMPLE_FLIE, output='data/cell_area.nc')
@@ -153,11 +153,11 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     ## Plot the difference time series of cLand.
     plt.figure(1)
     nmonths = cLand_diff.squeeze().shape[0]
-    years = np.linspace(500, 500+nmonths*(1/12), nmonths)
+    years = np.linspace(400, 400+nmonths*(1/12), nmonths)
     plt.plot(years, cLand_diff.squeeze()/G_IN_PG, color=COLORS[nocrop_exp], label=exp) # [Pg(C)]
     plt.xlabel('Time (years)')
     plt.ylabel('$\Delta$ cLand (Pg)')
-    plt.xlim(left=500)
+    plt.xlim(left=400)
     plt.ylim(bottom=0, top=200)
     plt.legend(frameon=False)
 
@@ -182,7 +182,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     plt.figure(3)
     for v in VARIABLES.keys():
         nmonths = cLand_diff.squeeze().shape[0]
-        years = np.linspace(500, 500+nmonths*(1/12), nmonths)
+        years = np.linspace(400, 400+nmonths*(1/12), nmonths)
         plot_this = data[nocrop_exp][v].squeeze() - data[gwl_exp][v].squeeze()
         plt.plot(
                 years,
@@ -190,7 +190,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
                 color=COLORS[nocrop_exp],
                 #label=v,
                 )
-    plt.xlim(left=500)
+    plt.xlim(left=400)
     plt.xlabel('Time (years)')
     plt.ylabel('$\Delta$ C (Pg)')
     plt.annotate('cWood', (675,125))

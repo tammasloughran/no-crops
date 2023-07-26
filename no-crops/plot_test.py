@@ -11,9 +11,10 @@ import cartopy.feature as cfeature
 import netCDF4 as nc
 from cdo import Cdo
 import ipdb
+import matplotlib.colors as mcolors
 
 cdo = Cdo()
-cdo.debug = True
+cdo.debug = False
 
 TILE_FRAC_VAR = 'fld_s03i317'
 WOOD_VAR = 'fld_s03i853'
@@ -21,10 +22,15 @@ NOCROP_ARCHIVE_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
 PROCESSED_NOCROP_DIR = '/g/data/p66/tfl561/archive_data'
 EXPERIMENTS = [
         'esm-esm-piNoCrops',
-        'esm-esm-piNoCrops-2'
+        'esm-esm-piNoCrops-2',
         #'old_esm-piNoCrops',
         #'esm-esm-pre-industrial',
         ]
+COLORS = {
+        'esm-piNoCrops':'blue',
+        'esm-piNoCrops-2':'lightblue',
+        'esm-piControl':'gray',
+        }
 UM_DATA = 'history/atm/netCDF'
 NOCROPS_VARIABLES = [
         'rh',
@@ -60,6 +66,7 @@ LAND_FRAC = '/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/esm-piCont
         '/fx/sftlf/gn/latest/sftlf_fx_ACCESS-ESM1-5_esm-piControl_r1i1p1f1_gn.nc'
 
 load_cdo = False
+plot_as_percent = True
 
 @cdod.cdo_selvar(TILE_FRAC_VAR)
 @cdod.cdo_mul(input1='cell_area.nc')
@@ -82,8 +89,10 @@ def cdo_load_global_sum(input:str, varname:str)->np.ndarray:
 
 
 @cdod.cdo_cat(input2='')
+@cdod.cdo_mul(input2='cell_area.nc')
 @cdod.cdo_mul(input2=LAND_FRAC) # From m-2 to -
 @cdod.cdo_divc('100') # From % to frac
+@cdod.cdo_mulc('86400')
 @cdod.cdo_muldpm # From s-1 to mon-1
 @cdod.cdo_divc('1e12') # From kg to Pg
 @cdod.cdo_fldsum
@@ -166,7 +175,6 @@ if __name__=='__main__':
         else:
             pi_data[var] = np.load(f'data/{var}_{exp}_test.npy')
 
-
     # Calculate tile areas. They are the same for both pre-industrial ensemble members.
     exp = 'esm-esm-piNoCrops'
     example_file = f'{NOCROP_ARCHIVE_DIR}/{exp}/{UM_DATA}/{exp}.pa-010101_mon.nc'
@@ -223,26 +231,50 @@ if __name__=='__main__':
 
 
     # Plot the carbon pools.
-    for var in NOCROPS_VARIABLES:
-        plt.figure()
-        if var[0]=='c':
-            plt.plot(yearly_mean(no_crops[1][var].sum(axis=1)), label='esm-piNoCrops')
-            plt.plot(yearly_mean(no_crops[2][var].sum(axis=1)), label='esm-piNoCrops-2')
-            plt.plot(yearly_mean(pi_data[var].sum(axis=1)), label='esm-piControl')
-        else:
-            plt.plot(yearly_mean(no_crops[1][var]), label='esm-piNoCrops')
-            plt.plot(yearly_mean(no_crops[2][var]), label='esm-piNoCrops-2')
-            plt.plot(yearly_mean(pi_data[var]), label='esm-piControl')
-        plt.title(var)
-        plt.xlabel('Time (months)')
-        if var=='tas':
-            plt.ylabel('°C')
-        else:
-            plt.ylabel('Pg C')
-        plt.legend()
-        plt.xlim(left=0)
-        plt.savefig(f'plots/{var}_timeseries.png', dpi=200)
-    plt.show()
+    #for var in NOCROPS_VARIABLES:
+    #    plt.figure()
+    #    if var[0]=='c':
+    #        plt.plot(
+    #                yearly_mean(no_crops[1][var].sum(axis=1)),
+    #                label='esm-piNoCrops',
+    #                color=COLORS['esm-piNoCrops'],
+    #                )
+    #        plt.plot(
+    #                yearly_mean(no_crops[2][var].sum(axis=1)),
+    #                label='esm-piNoCrops-2',
+    #                color=COLORS['esm-piNoCrops-2'],
+    #                )
+    #        plt.plot(
+    #                yearly_mean(pi_data[var].sum(axis=1)),
+    #                label='esm-piControl',
+    #                color=COLORS['esm-piControl'],
+    #                )
+    #    else:
+    #        plt.plot(
+    #                yearly_mean(no_crops[1][var]),
+    #                label='esm-piNoCrops',
+    #                color=COLORS['esm-piNoCrops'],
+    #                )
+    #        plt.plot(
+    #                yearly_mean(no_crops[2][var]),
+    #                label='esm-esm-piNoCrops-2',
+    #                color=COLORS['esm-piNoCrops-2'],
+    #                )
+    #        plt.plot(
+    #                yearly_mean(pi_data[var]),
+    #                label='esm-piControl',
+    #                color=COLORS['esm-piControl'],
+    #                )
+    #    plt.title(var)
+    #    plt.xlabel('Time (months)')
+    #    if var=='tas':
+    #        plt.ylabel('°C')
+    #    else:
+    #        plt.ylabel('Pg C')
+    #    plt.legend()
+    #    plt.xlim(left=0)
+    #    plt.savefig(f'plots/{var}_timeseries.png', dpi=200)
+    #plt.show()
 
     pft_names = {
             0:'EvgNL',
@@ -255,22 +287,42 @@ if __name__=='__main__':
             7:'Tundra',
             8:'C3 Crop',
             }
-
-    ipdb.set_trace()
+    color_cycle = [k[4:] for k in  mcolors.TABLEAU_COLORS.keys()]
+    colors = {pft:color_cycle[i] for i,pft in pft_names.items()}
+    light_colors = [
+            'lightblue',
+            'wheat',
+            'lightgreen',
+            'tomato',
+            'mediumorchid',
+            'chocolate',
+            'lightpink',
+            'lightgray',
+            'yellowgreen',
+            ]
 
     # Plot the difference for all PFTs.
     for var in NOCROPS_VARIABLES:
         if var=='tas' or var=='rh': continue
         plt.figure()
+        handles = list()
         for pft in range(9):
-            plt.plot(no_crops[var][:,pft] - pi_data[var][:,pft], label=f'{pft_names[pft]}')
-            plt.title(var)
-            plt.xlabel('Time (months)')
-            if var=='tas':
-                plt.ylabel('°C')
-            else:
-                plt.ylabel('Pg C')
-            plt.legend()
+            for e in [1,2]:
+                if e==1:
+                    color = colors[pft_names[pft]]
+                else:
+                    color = light_colors[pft]
+                lenexp = len(no_crops[e][var][:,pft])
+                handles.append(plt.plot(
+                        no_crops[e][var][:,pft] - pi_data[var][:lenexp,pft],
+                        label=f'{pft_names[pft]}',
+                        color=color
+                        )[0])
+                if e==2: handles.pop()
+        plt.title(var)
+        plt.xlabel('Time (months)')
+        plt.ylabel('Pg C')
+        plt.legend(handles, pft_names.values())
         plt.savefig(f'plots/{var}_difference_pfts.png', dpi=200)
     plt.show()
 
@@ -282,7 +334,7 @@ if __name__=='__main__':
     pi_temp = cdo_load_temp_last(input=files[-1], varname='tas')
 
     #ncin = nc.Dataset(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}_0101-0150.nc')
-    ncin = nc.Dataset(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}.nc')
+    ncin = nc.Dataset(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}_0101-0150.nc')
     lats = ncin.variables['lat_v'][:]
     lons = ncin.variables['lon_u'][:]
     # pcolormesh expects +1 lon.

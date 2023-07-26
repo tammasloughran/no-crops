@@ -21,8 +21,8 @@ import numpy as np
 def global_mean(data:np.ndarray, lats:np.ndarray)->np.ndarray:
     """Calculate an area weighted global mean. Weights are the cosine of lats.
     """
-    coslats = np.cos(np.deg2rad(lats))[None,:,None]*np.ones(data.shape)
-    return np.ma.average(data, axis=(1,2), weights=coslats)
+    coslats = np.cos(np.deg2rad(lats))[:,None]*np.ones(data.shape)
+    return np.ma.average(data, axis=(-1,-2), weights=coslats)
 
 
 # Variables
@@ -33,10 +33,10 @@ MOLMASS_CO2 = 0.0440095 # kg/mol
 KGKG_TO_MOLMOL = MOLMASS_AIR/MOLMASS_CO2 # Converion of kg/kg to mol/mol
 MIL = 1000000
 NYEARS = 12*100
-exp = 'PI-GWL-t6'
-exp_dir = f'/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5/{exp}/history/atm/netCDF'
-#exp = 'GWL-NoCrops-B2060'
-#exp_dir = f'/g/data/p66/tfl561/ACCESS-ESM/{exp}/history/atm/netCDF'
+#exp = 'PI-GWL-B2060'
+#exp_dir = f'/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5/{exp}/history/atm/netCDF'
+exp = 'GWL-EqFor-B2060'
+exp_dir = f'/g/data/p66/tfl561/ACCESS-ESM/{exp}/history/atm/netCDF'
 files = sorted(glob.glob(f'{exp_dir}/{exp}.pa-*_mon.nc'))[:800*12]
 files = files[0+sect*NYEARS:NYEARS+sect*NYEARS]
 
@@ -44,20 +44,20 @@ files = files[0+sect*NYEARS:NYEARS+sect*NYEARS]
 sample_nc = nc.Dataset(files[0], 'r')
 lats = sample_nc.variables['lat'][:]
 
-co2_data = np.empty((len(files),38))
+co2_data = np.empty((len(files),))
 for i,f in enumerate(files):
     print('\r', i, '/', len(files), end='')
     ncfile = nc.Dataset(f, 'r')
-    co2_data[i,:] = global_mean(ncfile.variables[CO2_FLD][:].squeeze(), lats)
+    co2_data[i] = global_mean(ncfile.variables[CO2_FLD][:,0,...].squeeze(), lats)
     ncfile.close()
 
 # Do vertical weighted average.
-layer_thickness = np.diff(sample_nc.variables['theta_level_height_bnds'][:]).squeeze()
-vertical_weights = (layer_thickness/layer_thickness.sum())[None,:]*np.ones(co2_data.shape)
-co2_concentration = np.average(co2_data, axis=1, weights=vertical_weights)*KGKG_TO_MOLMOL*MIL
+#layer_thickness = np.diff(sample_nc.variables['theta_level_height_bnds'][:]).squeeze()
+#vertical_weights = (layer_thickness/layer_thickness.sum())[None,:]*np.ones(co2_data.shape)
+#co2_concentration = np.average(co2_data, axis=1, weights=vertical_weights)*KGKG_TO_MOLMOL*MIL
 
 # Save to file
-np.save(f'data/co2_{exp}_global_mean_{sect}.npy', co2_concentration.data)
+np.save(f'data/co2_surface_{exp}_global_mean_{sect}.npy', co2_data.data)
 
 # Ignore all this.
 
@@ -71,7 +71,7 @@ np.save(f'data/co2_{exp}_global_mean_{sect}.npy', co2_concentration.data)
 #plt.ylabel('CO$_2$ concentration (kg/kg)')
 #plt.show()
 #
-#
+##
 #use_cdo = False
 #
 #if use_cdo:

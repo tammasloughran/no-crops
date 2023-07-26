@@ -4,6 +4,15 @@ import glob
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+def yearly_mean(data):
+    return np.mean(data.reshape((int(data.shape[-1]/12),12)), axis=1)
+
+
+MOLMASS_AIR = 0.0289652 # kg/mol
+MOLMASS_CO2 = 0.0440095 # kg/mol
+KGKG_TO_MOLMOL = MOLMASS_AIR/MOLMASS_CO2 # Converion of kg/kg to mol/mol
+MIL = 1000000
 EXPERIMENTS = [
         'PI-GWL-t6',
         'PI-GWL-B2035',
@@ -36,7 +45,7 @@ COLORS = {
         'GWL-NoCrops-B2050':'#055992',
         'GWL-NoCrops-B2055':'#1140AB',
         'GWL-NoCrops-B2060':'#1E31B6',
-        'GWL-EqFor-B2060','lightblue'
+        'GWL-EqFor-B2060':'deepskyblue'
         }
 YEARS = {
         'PI-GWL-t6':np.arange(0*12, 700*12)/12,
@@ -46,7 +55,7 @@ YEARS = {
         'PI-GWL-B2050':np.arange(0*12, 700*12)/12,
         'PI-GWL-B2055':np.arange(0*12, 700*12)/12,
         'PI-GWL-B2060':np.arange(0*12, 700*12)/12,
-        'GWL-NoCrops-B2030':np.arange(400*12, 601*12)/12,
+        'GWL-NoCrops-B2030':np.arange(400*12, 600*12)/12,
         'GWL-NoCrops-B2035':np.arange(400*12, 502*12)/12,
         'GWL-NoCrops-B2040':np.arange(400*12, 502*12)/12,
         'GWL-NoCrops-B2045':np.arange(400*12, 502*12)/12,
@@ -60,25 +69,30 @@ all_data = dict()
 handles = list()
 labels = list()
 for experiment in EXPERIMENTS:
-    files = sorted(glob.glob(f'data/co2_{experiment}_global_mean_?.npy'))
+    files = sorted(glob.glob(f'data/co2_surface_{experiment}_global_mean_?.npy'))
 
     all_data[experiment] = np.empty((0))
     for f in files:
         all_data[experiment] = np.concatenate((all_data[experiment],np.load(f)))
 
-    np.save(f'data/co2_{experiment}_all.npy', all_data[experiment])
+    np.save(f'data/co2_surface_{experiment}_all.npy', all_data[experiment])
 
-    if 'NoCrops' in experiment:
-        lstyle = 'solid'
+    if 'NoCrops' in experiment or 'EqFor' in experiment:
+        lwidth = 1.3
     else:
-        lstyle = 'dotted'
+        lwidth = 0.7
+    print(experiment)
+    x = yearly_mean(YEARS[experiment])
+    y = yearly_mean(all_data[experiment])*KGKG_TO_MOLMOL*MIL
     handle = plt.plot(
-            YEARS[experiment],
-            all_data[experiment],
+            #YEARS[experiment],
+            #all_data[experiment],
+            x,
+            y,
             color=COLORS[experiment],
-            linestyle=lstyle,
+            linewidth=lwidth,
             )
-    if 'NoCrops' in experiment:
+    if 'NoCrops' in experiment or 'EqFor' in experiment:
         handles.append(handle[0])
         labels.append(experiment)
 
