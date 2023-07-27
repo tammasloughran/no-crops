@@ -3,15 +3,15 @@
 import glob
 import os
 
-import numpy as np
-import cdo_decorators as cdod
-import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-import netCDF4 as nc
-from cdo import Cdo
+import cdo_decorators as cdod
 import ipdb
 import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+import netCDF4 as nc
+import numpy as np
+from cdo import Cdo
 
 cdo = Cdo()
 cdo.debug = False
@@ -66,7 +66,6 @@ LAND_FRAC = '/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/esm-piCont
         '/fx/sftlf/gn/latest/sftlf_fx_ACCESS-ESM1-5_esm-piControl_r1i1p1f1_gn.nc'
 
 load_cdo = False
-plot_as_percent = True
 
 @cdod.cdo_selvar(TILE_FRAC_VAR)
 @cdod.cdo_mul(input1='data/cell_area.nc')
@@ -115,6 +114,41 @@ def cdo_load_temp_last(input:str, varname:str):
     return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
 
 
+@cdod.cdo_seltimestep('-360/-1') # last 20 years (30*12)
+@cdod.cdo_selseason('DJF')
+@cdod.cdo_timmean
+@cdod.cdo_mul(input2='data/tile_areas.nc')
+@cdod.cdo_divc('1e15')
+def cdo_load_djf_mean(input:str, varname:str)->np.ndarray:
+    """Load a spatial map of DJF 30-year composites for carbon pools.
+    """
+    return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
+
+
+@cdod.cdo_seltimestep('-360/-1') # last 20 years (30*12)
+@cdod.cdo_selseason('DJF')
+@cdod.cdo_timmean
+def cdo_load_djf_mean2(input:str, varname:str)->np.ndarray:
+    """Load a spatial map of DJF 30-year composites for temp.
+    """
+    return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
+
+
+@cdod.cdo_mul(input2='data/cell_area.nc')
+@cdod.cdo_mul(input2=LAND_FRAC) # From m-2 to -
+@cdod.cdo_divc('100') # From % to frac
+@cdod.cdo_mulc('86400')
+@cdod.cdo_muldpm # From s-1 to mon-1
+@cdod.cdo_divc('1e12') # From kg to Pg
+@cdod.cdo_seltimestep('-360/-1') # last 20 years (30*12)
+@cdod.cdo_selseason('DJF')
+@cdod.cdo_timmean
+def cdo_load_djf_mean3(input:str, varname:str)->np.ndarray:
+    """Load a spatial map of DJF 30-year composites for flux.
+    """
+    return cdo.copy(input=input, returnCdf=True, options='-L').variables[varname][:].squeeze()
+
+
 def nc_selvar(filename:str, varname:str, outfile:str)->None:
     """Copy a variable from a netCDF file.
     """
@@ -153,6 +187,7 @@ if __name__=='__main__':
 
     # Load the pre-industrial variables according to the relevant table.
     pi_data = {}
+    pi_djf_data = {}
     for var in NOCROPS_VARIABLES:
         if load_cdo==True:
             files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/{var}_{exp}*.nc'))
@@ -161,9 +196,17 @@ if __name__=='__main__':
                         input='[ '+' '.join(files)+' ]',
                         varname=var,
                         )
+                pi_djf_data[var] = cdo_load_djf_mean(
+                        input=files[-1],
+                        varname=var,
+                        )
             elif var=='rh':
                 pi_data[var] = cdo_load_global_sum2(
                         input='[ '+' '.join(files)+' ]',
+                        varname=var,
+                        )
+                pi_djf_data[var] = cdo_load_djf_mean3(
+                        input=files[-1],
                         varname=var,
                         )
             else:
@@ -171,9 +214,15 @@ if __name__=='__main__':
                         input='[ '+' '.join(files)+' ]',
                         varname=var,
                         )
+                pi_djf_data[var] = cdo_load_djf_mean2(
+                        input=files[-1],
+                        varname=var,
+                        )
             np.save(f'data/{var}_{exp}_test.npy', pi_data[var].data)
+            np.save(f'data/{var}_{exp}_djf_test.npy', pi_djf_data[var].data)
         else:
             pi_data[var] = np.load(f'data/{var}_{exp}_test.npy')
+            pi_djf_data[var] = np.load(f'data/{var}_{exp}_djf_test.npy')
 
     # Calculate tile areas. They are the same for both pre-industrial ensemble members.
     exp = 'esm-esm-piNoCrops'
@@ -183,8 +232,10 @@ if __name__=='__main__':
 
     # Load the variables for the no-crop experiment.
     no_crops = {}
+    no_crops_djf = {}
     for e in [1,2]:
         no_crops[e] = {}
+        no_crops_djf[e] = {}
         if e==1:
             exp = 'esm-esm-piNoCrops'
         else:
@@ -197,9 +248,17 @@ if __name__=='__main__':
                             input='[ '+' '.join(files)+' ]',
                             varname=var,
                             )
+                    no_crops_djf[e][var] = cdo_load_djf_mean(
+                            input=files[-1],
+                            varname=var,
+                            )
                 elif var=='rh':
                     no_crops[e][var] = cdo_load_global_sum2(
                             input='[ '+' '.join(files)+' ]',
+                            varname=var,
+                            )
+                    no_crops_djf[e][var] = cdo_load_djf_mean3(
+                            input=files[-1],
                             varname=var,
                             )
                 else: # Load the sureface temperature variable as a global mean.
@@ -207,9 +266,15 @@ if __name__=='__main__':
                             input='[ '+' '.join(files)+' ]',
                             varname=var,
                             )
+                    no_crops_djf[e][var] = cdo_load_djf_mean2(
+                            input=files[-1],
+                            varname=var,
+                            )
                 np.save(f'data/{var}_{exp}_test.npy', no_crops[e][var].data)
+                np.save(f'data/{var}_{exp}_djf_test.npy', no_crops_djf[e][var].data)
             else:
                 no_crops[e][var] = np.load(f'data/{var}_{exp}_test.npy')
+                no_crops_djf[e][var] = np.load(f'data/{var}_{exp}_djf_test.npy')
 
 
     # Aggregate to the CMIP variables for cSoil and cLitter.
@@ -230,51 +295,81 @@ if __name__=='__main__':
         return data.reshape(toshape).mean(axis=1)
 
 
-    # Plot the carbon pools.
-    #for var in NOCROPS_VARIABLES:
-    #    plt.figure()
-    #    if var[0]=='c':
-    #        plt.plot(
-    #                yearly_mean(no_crops[1][var].sum(axis=1)),
-    #                label='esm-piNoCrops',
-    #                color=COLORS['esm-piNoCrops'],
-    #                )
-    #        plt.plot(
-    #                yearly_mean(no_crops[2][var].sum(axis=1)),
-    #                label='esm-piNoCrops-2',
-    #                color=COLORS['esm-piNoCrops-2'],
-    #                )
-    #        plt.plot(
-    #                yearly_mean(pi_data[var].sum(axis=1)),
-    #                label='esm-piControl',
-    #                color=COLORS['esm-piControl'],
-    #                )
-    #    else:
-    #        plt.plot(
-    #                yearly_mean(no_crops[1][var]),
-    #                label='esm-piNoCrops',
-    #                color=COLORS['esm-piNoCrops'],
-    #                )
-    #        plt.plot(
-    #                yearly_mean(no_crops[2][var]),
-    #                label='esm-esm-piNoCrops-2',
-    #                color=COLORS['esm-piNoCrops-2'],
-    #                )
-    #        plt.plot(
-    #                yearly_mean(pi_data[var]),
-    #                label='esm-piControl',
-    #                color=COLORS['esm-piControl'],
-    #                )
-    #    plt.title(var)
-    #    plt.xlabel('Time (months)')
-    #    if var=='tas':
-    #        plt.ylabel('°C')
-    #    else:
-    #        plt.ylabel('Pg C')
-    #    plt.legend()
-    #    plt.xlim(left=0)
-    #    plt.savefig(f'plots/{var}_timeseries.png', dpi=200)
-    #plt.show()
+#    # Plot the carbon pools.
+#    for var in NOCROPS_VARIABLES:
+#        plt.figure()
+#        if var[0]=='c':
+#            plt.plot(
+#                    yearly_mean(no_crops[1][var].sum(axis=1)),
+#                    label='esm-piNoCrops',
+#                    color=COLORS['esm-piNoCrops'],
+#                    )
+#            plt.plot(
+#                    yearly_mean(no_crops[2][var].sum(axis=1)),
+#                    label='esm-piNoCrops-2',
+#                    color=COLORS['esm-piNoCrops-2'],
+#                    )
+#            plt.plot(
+#                    yearly_mean(pi_data[var].sum(axis=1)),
+#                    label='esm-piControl',
+#                    color=COLORS['esm-piControl'],
+#                    )
+#        else:
+#            plt.plot(
+#                    yearly_mean(no_crops[1][var]),
+#                    label='esm-piNoCrops',
+#                    color=COLORS['esm-piNoCrops'],
+#                    )
+#            plt.plot(
+#                    yearly_mean(no_crops[2][var]),
+#                    label='esm-esm-piNoCrops-2',
+#                    color=COLORS['esm-piNoCrops-2'],
+#                    )
+#            plt.plot(
+#                    yearly_mean(pi_data[var]),
+#                    label='esm-piControl',
+#                    color=COLORS['esm-piControl'],
+#                    )
+#        plt.title(var)
+#        plt.xlabel('Time (months)')
+#        if var=='tas':
+#            plt.ylabel('°C')
+#        else:
+#            plt.ylabel('Pg C')
+#        plt.legend()
+#        plt.xlim(left=0)
+#        plt.savefig(f'plots/{var}_timeseries.png', dpi=200)
+#    plt.show()
+#
+#    # Plot as a % change of the pi control.
+#    for var in NOCROPS_VARIABLES:
+#        if var[0]!='c': continue
+#        plt.figure()
+#        no_crop1 = yearly_mean(no_crops[1][var].sum(axis=1))
+#        no_crop2 = yearly_mean(no_crops[2][var].sum(axis=1))
+#        picont1 = yearly_mean(pi_data[var][:len(no_crop1)*12].sum(axis=1))
+#        picont2 = yearly_mean(pi_data[var][:len(no_crop2)*12].sum(axis=1))
+#        plt.plot(
+#                (no_crop1/picont1)*100,
+#                label='esm-piNoCrops',
+#                color=COLORS['esm-piNoCrops'],
+#                )
+#        plt.plot(
+#                (no_crop2/picont2)*100,
+#                label='esm-piNoCrops-2',
+#                color=COLORS['esm-piNoCrops-2'],
+#                )
+#        plt.title(var)
+#        plt.xlabel('Time (months)')
+#        if var=='tas':
+#            plt.ylabel('°C')
+#        else:
+#            plt.ylabel('Pg C')
+#        plt.legend()
+#        plt.xlim(left=0)
+#        plt.savefig(f'plots/{var}_percent_change_timeseries.png', dpi=200)
+#    plt.show()
+
 
     pft_names = {
             0:'EvgNL',
@@ -301,30 +396,30 @@ if __name__=='__main__':
             'yellowgreen',
             ]
 
-    # Plot the difference for all PFTs.
-    for var in NOCROPS_VARIABLES:
-        if var=='tas' or var=='rh': continue
-        plt.figure()
-        handles = list()
-        for pft in range(9):
-            for e in [1,2]:
-                if e==1:
-                    color = colors[pft_names[pft]]
-                else:
-                    color = light_colors[pft]
-                lenexp = len(no_crops[e][var][:,pft])
-                handles.append(plt.plot(
-                        no_crops[e][var][:,pft] - pi_data[var][:lenexp,pft],
-                        label=f'{pft_names[pft]}',
-                        color=color
-                        )[0])
-                if e==2: handles.pop()
-        plt.title(var)
-        plt.xlabel('Time (months)')
-        plt.ylabel('Pg C')
-        plt.legend(handles, pft_names.values())
-        plt.savefig(f'plots/{var}_difference_pfts.png', dpi=200)
-    plt.show()
+#    # Plot the difference for all PFTs.
+#    for var in NOCROPS_VARIABLES:
+#        if var=='tas' or var=='rh': continue
+#        plt.figure()
+#        handles = list()
+#        for pft in range(9):
+#            for e in [1,2]:
+#                if e==1:
+#                    color = colors[pft_names[pft]]
+#                else:
+#                    color = light_colors[pft]
+#                lenexp = len(no_crops[e][var][:,pft])
+#                handles.append(plt.plot(
+#                        no_crops[e][var][:,pft] - pi_data[var][:lenexp,pft],
+#                        label=f'{pft_names[pft]}',
+#                        color=color
+#                        )[0])
+#                if e==2: handles.pop()
+#        plt.title(var)
+#        plt.xlabel('Time (months)')
+#        plt.ylabel('Pg C')
+#        plt.legend(handles, pft_names.values())
+#        plt.savefig(f'plots/{var}_difference_pfts.png', dpi=200)
+#    plt.show()
 
     exp = 'esm-esm-piNoCrops-2'
     files = sorted(glob.glob(f'{PROCESSED_NOCROP_DIR}/{exp}/tas_{exp}*.nc'))
@@ -342,6 +437,28 @@ if __name__=='__main__':
     # Shift plotting to centre grid, align with coastlines.
     llons = llons - (llons[1] - llons[0])/2
     llats = lats - (lats[1] - lats[0])/4
+
+    # Plot the maps of djf.
+    for var in NOCROPS_VARIABLES:
+        plt.figure()
+        ax = plt.axes(projection=ccrs.Robinson())
+        if var[0]=='c':
+            data = np.nansum(no_crops_djf[1][var], axis=0) - np.nansum(pi_djf_data[var], axis=0)
+            data[data>1e15] = np.nan
+        else:
+            data = no_crops_djf[1][var] - pi_djf_data[var]
+        mappable = ax.pcolormesh(
+                llons,
+                llats,
+                data,
+                cmap='seismic',
+                transform=ccrs.PlateCarree(),
+                vmin=-1.0*max(abs(data.min()), abs(data.max())),
+                vmax=max(abs(data.min()), abs(data.max())),
+                )
+        ax.coastlines()
+        plt.colorbar(mappable, label=f'$\Delta$ {var} (Pg)', orientation='horizontal')
+        plt.savefig(f'plots/{var}_esm-esm-piNoCrops-1_djf.png', dpi=200)
 
     # Plot the map of the difference in temperature.
     plt.figure()
