@@ -26,23 +26,31 @@ RAW_NOCROP_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
 TILE_FRAC_CODE = 'fld_s03i317'
 
 COLORS = {
-        'GWL-NoCrops-B2030':'#62EA00',
+        #'GWL-NoCrops-B2030':'#62EA00',
+        'GWL-NoCrops-B2030':'pink',
+        #'GWL-NoCr-B2030-02':'#62EA00',
+        'GWL-NoCr-B2030-02':'pink',
         'GWL-NoCrops-B2035':'#24CC00',
         'GWL-NoCrops-B2040':'#079F2A',
         'GWL-NoCrops-B2045':'#00786B',
         'GWL-NoCrops-B2050':'#055992',
         'GWL-NoCrops-B2055':'#1140AB',
-        'GWL-NoCrops-B2060':'#1E31B6',
+        #'GWL-NoCrops-B2060':'#1E31B6',
+        'GWL-NoCrops-B2060':'red',
+        #'GWL-NoCr-B2060-02':'#1E31B6',
+        'GWL-NoCr-B2060-02':'red',
         'GWL-EqFor-B2060':'deepskyblue',
         }
 EXPERIMENTS = {
         'PI-GWL-t6':'GWL-NoCrops-B2030',
+        'PI-GWL-t6_duplicate':'GWL-NoCr-B2030-02',
         'PI-GWL-B2035':'GWL-NoCrops-B2035',
         'PI-GWL-B2040':'GWL-NoCrops-B2040',
         'PI-GWL-B2045':'GWL-NoCrops-B2045',
         'PI-GWL-B2050':'GWL-NoCrops-B2050',
         'PI-GWL-B2055':'GWL-NoCrops-B2055',
         'PI-GWL-B2060':'GWL-NoCrops-B2060',
+        'PI-GWL-B2060-duplicate':'GWL-NoCr-B2060-02',
         'PI-GWL-B2060_duplicate':'GWL-EqFor-B2060',
         }
 VARIABLES = {
@@ -70,16 +78,16 @@ lons = ncfile.variables['lon'][:]
 
 # Create tile frac file for both experiments.
 for exp in EXPERIMENTS.keys():
-    if 'duplicate' in exp: exp = 'PI-GWL-B2060'
+    if 'duplicate' in exp: exp = exp[:-10]
     cdo.selvar(
             TILE_FRAC_CODE,
-            input=f'{RAW_CMIP_DIR}/{exp}/history/atm/netCDF/{exp}.pa-050101_mon.nc',
+            input=f'{RAW_CMIP_DIR}/{exp}/history/atm/netCDF/{exp}.pa-051001_mon.nc',
             output=f'data/frac_{exp}.nc',
             )
 for exp in EXPERIMENTS.values():
     cdo.selvar(
             TILE_FRAC_CODE,
-            input=f'{RAW_NOCROP_DIR}/{exp}/history/atm/netCDF/{exp}.pa-050101_mon.nc',
+            input=f'{RAW_NOCROP_DIR}/{exp}/history/atm/netCDF/{exp}.pa-051001_mon.nc',
             output=f'data/frac_{exp}.nc',
             )
 
@@ -87,7 +95,7 @@ data = {}
 data_tmean = {}
 plt.figure()
 for gwl_exp,nocrop_exp in EXPERIMENTS.items():
-    if 'duplicate' in gwl_exp: gwl_exp = 'PI-GWL-B2060'
+    if 'duplicate' in gwl_exp: gwl_exp = gwl_exp[:-10]
     for exp in [gwl_exp, nocrop_exp]:
         print(f"{exp}")
         data[exp] = {}
@@ -97,7 +105,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
         @cdod.cdo_mul(input2=f'data/frac_{exp}.nc') # Multiply by tile fractions.
         @cdod.cdo_mul(input2='data/cell_area.nc') # Multiply by cell area.
         @cdod.cdo_sellonlatbox('110','155','-45','-10') # Australia region.
-        @cdod.cdo_vertsum # Plant functional type sum.
+        @cdod.cdo_vertsum() # Plant functional type sum.
         @cdod.cdo_fldsum # Australia sum.
         def load_global_sum(var, input:str)->np.ma.MaskedArray:
             """Load Australia sum of a carbon pool variable.
@@ -107,7 +115,11 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
 
 
         # Load the data.
-        if 'B2030' in exp or 't6' in exp:
+        if exp=='GWL-NoCr-B2030-02':
+            period = '0510-0675'
+        elif exp=='GWL-NoCr-B2060-02':
+            period = '0510-0602'
+        elif 'B2030' in exp or 't6' in exp:
             period = '0500-0700'
         else:
             period = '0500-0601'
@@ -130,7 +142,12 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
             data[exp]['cLand'] += data[exp][var]
 
     # Find the difference for cLand.
-    cLand_diff = data[nocrop_exp]['cLand'] - data[gwl_exp]['cLand']
+    if nocrop_exp=='GWL-NoCr-B2030-02':
+        cLand_diff = data[nocrop_exp]['cLand'] - data[gwl_exp]['cLand'][12*10:12*175]
+    elif nocrop_exp=='GWL-NoCr-B2060-02':
+        cLand_diff = data[nocrop_exp]['cLand'] - data[gwl_exp]['cLand'][12*10:12*102]
+    else:
+        cLand_diff = data[nocrop_exp]['cLand'] - data[gwl_exp]['cLand']
 
     ## Plot the difference time series of cLand.
     plt.figure(1)
@@ -148,6 +165,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     for v in VARIABLES.keys():
         nmonths = cLand_diff.squeeze().shape[0]
         years = np.linspace(500, 500+nmonths*(1/12), nmonths)
+        if data[nocrop_exp][v].shape!=data[gwl_exp][v].shape: continue
         plot_this = data[nocrop_exp][v].squeeze() - data[gwl_exp][v].squeeze()
         plt.plot(
                 years,

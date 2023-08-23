@@ -72,26 +72,17 @@ ncfile = nc.Dataset(EXAMPLE_FLIE, 'r')
 lats = ncfile.variables['lat'][:]
 lons = ncfile.variables['lon'][:]
 
-data = {}
 data_tmean = {}
 plt.figure()
 for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     if 'duplicate' in gwl_exp: gwl_exp = 'PI-GWL-B2060'
     for exp in [gwl_exp, nocrop_exp]:
         print(f"{exp}")
-        data[exp] = {}
         data_tmean[exp] = {}
 
 
-        @cdod.cdo_fldmean(weights='TRUE') # Global sum.
-        def load_global_sum(var, input:str)->np.ma.MaskedArray:
-            """Load global sum of a carbon pool variable.
-            """
-            ncfile = cdo.copy(input=input, returnCdf=True, options='-L')
-            return ncfile.variables[var][:]
-
-
-        @cdod.cdo_seltimestep(f'{LAST30}/-1') # last 30 years
+        #@cdod.cdo_seltimestep(f'{LAST30}/-1') # last 30 years
+        @cdod.cdo_seltimestep(f'1/12') # last 30 years
         @cdod.cdo_timmean # Temporal average
         def load_last30(var, input:str)->np.ma.MaskedArray:
             """Load last 30 year mean of a carbon pool variable.
@@ -107,50 +98,19 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
             period = '0500-0601'
         if load_from_npy:
             for var in VARIABLES.keys():
-                data[exp][var] = np.load(f'data/{var}_{exp}_global_sum.npy') # [g(C)]
-                data_tmean[exp][var] = np.load(f'data/{var}_{exp}_last20.npy')
-        else:
-            for var in VARIABLES.keys():
-                print(f"Loading {var}")
-                #data[exp][var] = load_global_sum(
-                #        var,
-                #        input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
-                #        )
-                #np.save(f'data/{var}_{exp}_global_sum.npy', data[exp][var].data) # [g(C)]
-                data_tmean[exp][var] = load_last30(
-                        var,
-                        input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
-                        )
-                #np.save(f'data/{var}_{exp}_last20.npy', data_tmean[exp][var].data) # [g(C)]
-                np.save(f'data/{var}_{exp}_firstyear.npy', data_tmean[exp][var].data) # [g(C)]
-
-    # Plot the difference time series of temperature.
-    plt.figure(1)
-    if len(data[nocrop_exp]['tas'])==1223:
-        data[nocrop_exp]['tas'] = np.append(data[nocrop_exp]['tas'], [np.nan])
-    line = data[nocrop_exp]['tas'].squeeze() - data[gwl_exp]['tas'].squeeze()
-    nmonths = data[exp]['tas'].squeeze().shape[0]
-    years = np.linspace(400, 400+nmonths*(1/12), nmonths)
-    line = yearly_mean_from_monthly(line)
-    years = yearly_mean_from_monthly(years)
-    plt.plot(
-            years,
-            line,
-            color=COLORS[nocrop_exp],
-            label=exp,
-            )
-    plt.xlabel('Time (years)')
-    plt.ylabel('$\Delta$ Temperature ($^{\circ}$C)')
-    plt.xlim(left=400)
-    #plt.ylim(bottom=0)
-    plt.legend(frameon=False)
+                data_tmean[exp][var] = np.load(f'data/{var}_{exp}_firstyear.npy')
+        #for var in VARIABLES.keys():
+            #data_tmean[exp][var] = load_last30(
+            #        var,
+            #        input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
+            #        )
+            #np.save(f'data/{var}_{exp}_last20.npy', data_tmean[exp][var].data) # [g(C)]
+            #np.save(f'data/{var}_{exp}_firstyear.npy', data_tmean[exp][var].data) # [g(C)]
 
     # Plot the map of the difference for the last 20 years
     fig2 = plt.figure()
     ax = fig2.add_subplot(1, 1, 1, projection=ccrs.Robinson())
-    colors = ax.pcolormesh(
-            lons,
-            lats,
+    colors = ax.pcolormesh(lons, lats,
             data_tmean[nocrop_exp]['tas'].squeeze() - data_tmean[gwl_exp]['tas'].squeeze(),
             cmap='seismic',
             vmin=-4,
@@ -158,9 +118,13 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
             transform=ccrs.PlateCarree(),
             )
     ax.coastlines()
-    plt.colorbar(colors, label='$\Delta$ temperature ($^{\circ}$C)', orientation='horizontal', pad=0.05)
+    plt.colorbar(colors,
+            label='$\Delta$ temperature ($^{\circ}$C)',
+            orientation='horizontal',
+            pad=0.05,
+            )
     plt.title(f'{nocrop_exp} - {gwl_exp}')
-    plt.savefig(f'plots/tas_{nocrop_exp}_last30.png', dpi=DPI)
+    plt.savefig(f'plots/tas_{nocrop_exp}_firstyear.png', dpi=DPI)
 
     # Plot the map of the difference for the last 30 years in Australia.
     fig = plt.figure()
@@ -168,22 +132,44 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     australia_lonlat = [110,155,-45,-10]
     ax.set_extent(australia_lonlat, crs=ccrs.PlateCarree())
     data_to_plot = data_tmean[nocrop_exp]['tas'].squeeze() - data_tmean[gwl_exp]['tas'].squeeze()
-    colors = ax.pcolormesh(
-            lons,
-            lats,
-            data_to_plot,
+    colors = ax.pcolormesh(lons, lats, data_to_plot,
             cmap='seismic',
             vmin=-4,
             vmax=4,
             transform=ccrs.PlateCarree(),
             )
     ax.coastlines()
-    plt.colorbar(colors, label='$\Delta$ Surface air temperature ($^{\circ}$C)]', orientation='horizontal', pad=0.05)
+    plt.colorbar(colors,
+            label='$\Delta$ Surface air temperature ($^{\circ}$C)]',
+            orientation='horizontal',
+            pad=0.05,
+            )
     plt.title(f'{nocrop_exp} - {gwl_exp}')
-    plt.savefig(f'plots/tas_{nocrop_exp}_australia_last30.png', dpi=DPI)
+    plt.savefig(f'plots/tas_{nocrop_exp}_australia_firstyear.png', dpi=DPI)
 
-# Save figures.
-plt.figure(1)
-plt.savefig(f'plots/tas_GWL_gloabl_mean.png', dpi=DPI)
-plt.show()
+# Aggregate
+ensemble_mean = 0
+n = 0
+for gwl_exp,nocrop_exp in EXPERIMENTS.items():
+    if 'duplicate' in gwl_exp: gwl_exp = 'PI-GWL-B2060'
+    ensemble_mean += data_tmean[nocrop_exp]['tas'].squeeze() - data_tmean[gwl_exp]['tas'].squeeze()
+    n += 1
+ensemble_mean /= n
 
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1, projection=ccrs.Robinson())
+colors = ax.pcolormesh(lons, lats, ensemble_mean,
+        cmap='seismic',
+        vmin=-4,
+        vmax=4,
+        transform=ccrs.PlateCarree(),
+        )
+ax.coastlines()
+plt.colorbar(colors,
+        label='$\Delta$ temperature ($^{\circ}$C)',
+        orientation='horizontal',
+        pad=0.05,
+        )
+plt.title(f'First year experiment mean')
+plt.savefig(f'plots/tas_{nocrop_exp}_firstyear_ensemble_mean.png', dpi=DPI)
+#plt.show()
