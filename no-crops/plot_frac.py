@@ -1,8 +1,11 @@
+#!/usr/bin/env python3
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import netCDF4 as nc
 import numpy as np
-from cdo import Cdo; cdo = Cdo()
+from cdo import Cdo
+cdo = Cdo()
 import cdo_decorators as cdod
 
 PI_GWL_DIR = '/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5'
@@ -39,24 +42,28 @@ lats = nc.Dataset(f, 'r').variables['lat'][:]
 for expe in GWL_EXPERIMENTS:
     print(expe, trees[expe].sum()*10**-12)
 
-# define Nocrop versions
-
-# Load NoCrops versions
-
 # Plot data
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1, projection=ccrs.Robinson())
 diff = trees['GWL-NoCrops-B2060'] - trees['PI-GWL-B2060']
-diff /= 1e12
+diff /= 1e10 # Mha
+bnds = np.arange(0, 3.2, 0.2)
+bnds[0] = 0.01
+discrete_bins = mpl.colors.BoundaryNorm(
+        boundaries=bnds,
+        ncolors=256,
+        )
+cmap = plt.cm.get_cmap('YlGn')
+cmap.set_under('white')
 colors = ax.pcolormesh(lons, lats, diff,
-        vmin=0,
-        vmax=0.03,
-        cmap='YlGn',
+        norm=discrete_bins,
+        cmap=cmap,
         transform=ccrs.PlateCarree(),
         )
 ax.coastlines()
 plt.colorbar(colors,
-        label='Area Mkm$^2$',
+        ticks=np.arange(0.1, 3.1, 0.2),
+        label='Area (Mha)',
         orientation='horizontal',
         pad=0.05,
         )

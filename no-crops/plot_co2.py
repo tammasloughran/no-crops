@@ -1,14 +1,31 @@
-#!/usr/env python3
+#!/bin/env python3
 import glob
 
+import ipdb
 import numpy as np
+import netCDF4 as nc
 import matplotlib.pyplot as plt
+
+
+def load_co2(filename:str, var:str):
+    """Load the surface co2 from a file.
+    """
+    return nc.Dataset(filename, 'r').variables[var][:,0,...].squeeze()
 
 
 def yearly_mean(data):
     return np.mean(data.reshape((int(data.shape[-1]/12),12)), axis=1)
 
 
+def global_mean(data:np.ndarray, lats:np.ndarray)->np.ndarray:
+    """Calculate an area weighted global mean. Weights are the cosine of lats.
+    """
+    coslats = np.cos(np.deg2rad(lats))[:,None]*np.ones(data.shape)
+    return np.ma.average(data, axis=(-1,-2), weights=coslats)
+
+
+# Variables
+CO2_FLD = 'fld_s00i252'
 MOLMASS_AIR = 0.0289652 # kg/mol
 MOLMASS_CO2 = 0.0440095 # kg/mol
 KGKG_TO_MOLMOL = MOLMASS_AIR/MOLMASS_CO2 # Converion of kg/kg to mol/mol
@@ -65,41 +82,79 @@ YEARS = {
         'GWL-EqFor-B2060':np.arange(400*12, 502*12)/12,
         }
 
+load_nc = False
+
 all_data = dict()
 handles = list()
 labels = list()
-for experiment in EXPERIMENTS:
-    files = sorted(glob.glob(f'data/co2_surface_{experiment}_global_mean_?.npy'))
+for exper in EXPERIMENTS:
+    if load_nc:
+        if 'NoCrops' in exper or 'EqFor' in exper:
+            exp_dir = f'/g/data/p66/tfl561/ACCESS-ESM/{exper}/history/atm/netCDF'
+        else:
+            exp_dir = f'/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5/{exper}/history/atm/netCDF'
+        files = sorted(glob.glob(f'{exp_dir}/{exper}.pa-*_mon.nc'))[:700*12]
+        sample_nc = nc.Dataset(files[0], 'r')
+        lats = sample_nc.variables['lat'][:]
+        all_data[exper] = np.ones((len(files),))*np.nan
+        for i,f in enumerate(files):
+            print(i, '/', len(files), '\r', end='')
+            all_data[exper][i] = global_mean(load_co2(f, CO2_FLD), lats)
+        np.save(f'data/co2_surface_{exper}.npy', all_data[exper])
+    else:
+        all_data[exper] = np.load(f'data/co2_surface_{exper}_all.npy')
 
-    all_data[experiment] = np.empty((0))
-    for f in files:
-        all_data[experiment] = np.concatenate((all_data[experiment],np.load(f)))
-
-    np.save(f'data/co2_surface_{experiment}_all.npy', all_data[experiment])
-
-    if 'NoCrops' in experiment or 'EqFor' in experiment:
+    if 'NoCrops' in exper or 'EqFor' in exper:
         lwidth = 1.3
     else:
         lwidth = 0.7
-    print(experiment)
-    x = yearly_mean(YEARS[experiment])
-    y = yearly_mean(all_data[experiment])*KGKG_TO_MOLMOL*MIL
-    handle = plt.plot(
-            #YEARS[experiment],
-            #all_data[experiment],
-            x,
-            y,
-            color=COLORS[experiment],
+    print(exper)
+    x = yearly_mean(YEARS[exper])
+    y = yearly_mean(all_data[exper])*KGKG_TO_MOLMOL*MIL
+    handle = plt.plot(x, y,
+            color=COLORS[exper],
             linewidth=lwidth,
             )
-    if 'NoCrops' in experiment or 'EqFor' in experiment:
+    if 'NoCrops' in exper or 'EqFor' in exper:
         handles.append(handle[0])
-        labels.append(experiment)
+        labels.append(exper)
 
 plt.legend(handles, labels, frameon=False)
 plt.xlabel('Time (years)')
 plt.ylabel('CO$_2$ (ppm)')
 plt.xlim(left=0, right=700)
-plt.savefig('plots/co2_global_warming_level_no_crops.svg', dpi=200)
-plt.show()
+plt.savefig('plots/co2_surface_global_warming_level_no_crops.svg', dpi=200)
 
+
+def pretty_print(data):
+    x = 0
+    for i in range(data.size):
+        if x==5:
+            if 'int' in str(type(data[i])):
+                print(f"{data[i]}, ", end='\n')
+            else:
+                print(f"{data[i]:e}, ", end='\n')
+            x = 0
+        else:
+            if 'int' in str(type(data[i])):
+                print(f"{data[i]}, ", end='')
+            else:
+                print(f"{data[i]:e}, ", end='')
+            x += 1
+    print("")
+
+
+print("Namelist for GWL-NoCrops-B2030 co2")
+print()
+
+exper = 'GWL-NoCrops-B2030'
+MISSINGVAL = -32768
+nyears = int(YEARS[exper].size/12)
+print("L_CLIM=.TRUE.,", end='\n')
+print(f"CLIM_FCG_NYEARS={nyears},", end='\n')
+print("CLIM_FCG_YEARS(:,1)=", end='')
+pretty_print(yearly_mean(YEARS[exper]).astype(int))
+print(f"CLIM_FCG_LEVELS(:,1)=", end='')
+pretty_print(yearly_mean(all_data[exper]))
+print(f"CLIM_FCG_RATES(:,1)=", end='')
+pretty_print(np.ones(yearly_mean(YEARS[exper]).size, dtype=int)*MISSINGVAL)

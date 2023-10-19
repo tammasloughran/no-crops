@@ -5,7 +5,7 @@ import os
 
 import cartopy.crs as ccrs
 import cdo_decorators as cdod
-import ipdb
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import netCDF4 as nc
 import numpy as np
@@ -164,17 +164,25 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     # Plot the map of the difference for the last 20 years
     fig2 = plt.figure()
     ax = fig2.add_subplot(1, 1, 1, projection=ccrs.Robinson())
+    discrete_bins = mpl.colors.BoundaryNorm(
+            boundaries=np.arange(-0.65, 0.65+0.1, 0.1),
+            ncolors=256,
+            )
     colors = ax.pcolormesh(
             lons,
             lats,
             cLand_diff_tmean.squeeze()/G_IN_PG,
+            norm=discrete_bins,
             cmap='seismic',
-            vmin=-0.6,
-            vmax=0.6,
             transform=ccrs.PlateCarree(),
             )
     ax.coastlines()
-    plt.colorbar(colors, label='$\Delta$ cLand (Pg)', orientation='horizontal', pad=0.05)
+    plt.colorbar(colors,
+            ticks=np.arange(-0.6, 0.6+0.1, 0.1),
+            label='$\Delta$ cLand (Pg)',
+            orientation='horizontal',
+            pad=0.05,
+            )
     plt.title(f'{nocrop_exp} - {gwl_exp}')
     plt.savefig(f'plots/cLand_{nocrop_exp}_last20.png', dpi=DPI)
 
@@ -205,17 +213,25 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
     ax.set_extent([110,155,-45,-10], crs=ccrs.PlateCarree())
+    discrete_bins = mpl.colors.BoundaryNorm(
+            boundaries=np.arange(-0.65, 0.65+0.1, 0.1),
+            ncolors=256,
+            )
     colors = ax.pcolormesh(
             lons,
             lats,
             cLand_diff_tmean.squeeze()/G_IN_PG,
+            norm=discrete_bins,
             cmap='seismic',
-            vmin=-0.6,
-            vmax=0.6,
             transform=ccrs.PlateCarree(),
             )
     ax.coastlines()
-    plt.colorbar(colors, label='$\Delta$ cLand (Pg)]', orientation='horizontal', pad=0.05)
+    plt.colorbar(colors,
+            ticks=np.arange(-0.6, 0.6+0.1, 0.1),
+            label='$\Delta$ cLand (Pg)',
+            orientation='horizontal',
+            pad=0.05,
+            )
     plt.title(f'{nocrop_exp} - {gwl_exp}')
     plt.savefig(f'plots/cLand_{nocrop_exp}_australia_last20.png', dpi=DPI)
 
