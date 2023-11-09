@@ -58,6 +58,8 @@ cmap.set_under('white')
 colors = ax.pcolormesh(lons, lats, diff,
         norm=discrete_bins,
         cmap=cmap,
+        linewidth=0.2,
+        edgecolors='face',
         transform=ccrs.PlateCarree(),
         )
 ax.coastlines()
