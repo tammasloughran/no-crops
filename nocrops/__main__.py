@@ -1,0 +1,11 @@
+import plot_frac
+import plot_co2
+import plot_global_warming_level_australia
+import plot_global_warming_level_carbon
+import plot_global_warming_level_precip
+import plot_global_warming_level_temperature_firstyear
+import plot_global_warming_level_temperature
+
+import subprocess
+subprocess.call('python3 nocrops/plot-preindustrial_carbon_variables.py')
+subprocess.call('python3 nocrops/plot-preindustrial_other_variables.py')
