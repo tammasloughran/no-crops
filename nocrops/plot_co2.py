@@ -31,6 +31,7 @@ MOLMASS_CO2 = 0.0440095 # kg/mol
 KGKG_TO_MOLMOL = MOLMASS_AIR/MOLMASS_CO2 # Converion of kg/kg to mol/mol
 MIL = 1000000
 EXPERIMENTS = [
+        'esm-esm-piNoCrops',
         'PI-GWL-t6',
         'PI-GWL-B2035',
         'PI-GWL-B2040',
@@ -48,6 +49,7 @@ EXPERIMENTS = [
         'GWL-EqFor-B2060',
         ]
 COLORS = {
+        'esm-esm-piNoCrops':'black',
         'PI-GWL-t6':'#62EA00',
         'PI-GWL-B2035':'#24CC00',
         'PI-GWL-B2040':'#079F2A',
@@ -65,6 +67,7 @@ COLORS = {
         'GWL-EqFor-B2060':'deepskyblue'
         }
 YEARS = {
+        'esm-esm-piNoCrops':np.arange(0*12, 100*12)/12 + 100,
         'PI-GWL-t6':np.arange(0*12, 700*12)/12,
         'PI-GWL-B2035':np.arange(0*12, 700*12)/12,
         'PI-GWL-B2040':np.arange(0*12, 700*12)/12,
@@ -92,7 +95,8 @@ for exper in EXPERIMENTS:
         if 'NoCrops' in exper or 'EqFor' in exper:
             exp_dir = f'/g/data/p66/tfl561/ACCESS-ESM/{exper}/history/atm/netCDF'
         else:
-            exp_dir = f'/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5/{exper}/history/atm/netCDF'
+            exp_dir = f'/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5/{exper}/'+\
+                    'history/atm/netCDF'
         files = sorted(glob.glob(f'{exp_dir}/{exper}.pa-*_mon.nc'))[:700*12]
         sample_nc = nc.Dataset(files[0], 'r')
         lats = sample_nc.variables['lat'][:]
@@ -100,7 +104,7 @@ for exper in EXPERIMENTS:
         for i,f in enumerate(files):
             print(i, '/', len(files), '\r', end='')
             all_data[exper][i] = global_mean(load_co2(f, CO2_FLD), lats)
-        np.save(f'data/co2_surface_{exper}.npy', all_data[exper])
+        np.save(f'data/co2_surface_{exper}_all.npy', all_data[exper])
     else:
         all_data[exper] = np.load(f'data/co2_surface_{exper}_all.npy')
 
@@ -119,11 +123,12 @@ for exper in EXPERIMENTS:
         handles.append(handle[0])
         labels.append(exper)
 
-plt.legend(handles, labels, frameon=False)
+plt.legend(handles, labels, fontsize='small', frameon=False)
 plt.xlabel('Time (years)')
 plt.ylabel('CO$_2$ (ppm)')
 plt.xlim(left=0, right=700)
-plt.savefig('plots/co2_surface_global_warming_level_no_crops.svg', dpi=200)
+plt.show()
+#plt.savefig('plots/co2_surface_global_warming_level_no_crops.svg', dpi=200)
 
 
 def pretty_print(data):
