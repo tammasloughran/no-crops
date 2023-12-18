@@ -3,6 +3,7 @@
 import glob
 import os
 
+import scipy.stats as stats
 import cartopy.crs as ccrs
 import cdo_decorators as cdod
 import ipdb
@@ -112,16 +113,14 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
         else:
             for var in VARIABLES.keys():
                 print(f"Loading {var}")
-                #data[exp][var] = load_global_sum(
-                #        var,
+                #data[exp][var] = load_global_sum(var,
                 #        input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
                 #        )
                 #np.save(f'data/{var}_{exp}_global_sum.npy', data[exp][var].data) # [g(C)]
-                data_tmean[exp][var] = load_last30(
-                        var,
+                #np.save(f'data/{var}_{exp}_last20.npy', data_tmean[exp][var].data) # [g(C)]
+                data_tmean[exp][var] = load_last30(var,
                         input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
                         )
-                #np.save(f'data/{var}_{exp}_last20.npy', data_tmean[exp][var].data) # [g(C)]
                 np.save(f'data/{var}_{exp}_firstyear.npy', data_tmean[exp][var].data) # [g(C)]
 
     # Plot the difference time series of temperature.
@@ -133,9 +132,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     years = np.linspace(400, 400+nmonths*(1/12), nmonths)
     line = yearly_mean_from_monthly(line)
     years = yearly_mean_from_monthly(years)
-    plt.plot(
-            years,
-            line,
+    plt.plot(years, line,
             color=COLORS[nocrop_exp],
             label=exp,
             )
@@ -145,20 +142,22 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     #plt.ylim(bottom=0)
     plt.legend(frameon=False)
 
-    # Plot the map of the difference for the last 20 years
+    # Plot the map of the difference for the last 30 years
+    difference = data_tmean[nocrop_exp]['tas'].squeeze() - data_tmean[gwl_exp]['tas'].squeeze()
     fig2 = plt.figure()
     ax = fig2.add_subplot(1, 1, 1, projection=ccrs.Robinson())
-    colors = ax.pcolormesh(
-            lons,
-            lats,
-            data_tmean[nocrop_exp]['tas'].squeeze() - data_tmean[gwl_exp]['tas'].squeeze(),
+    colors = ax.pcolormesh(lons, lats, difference,
             cmap='seismic',
             vmin=-4,
             vmax=4,
             transform=ccrs.PlateCarree(),
             )
     ax.coastlines()
-    plt.colorbar(colors, label='$\Delta$ temperature ($^{\circ}$C)', orientation='horizontal', pad=0.05)
+    plt.colorbar(colors,
+            label='$\Delta$ temperature ($^{\circ}$C)',
+            orientation='horizontal',
+            pad=0.05,
+            )
     plt.title(f'{nocrop_exp} - {gwl_exp}')
     plt.savefig(f'plots/tas_{nocrop_exp}_last30.png', dpi=DPI)
 
@@ -168,19 +167,51 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     australia_lonlat = [110,155,-45,-10]
     ax.set_extent(australia_lonlat, crs=ccrs.PlateCarree())
     data_to_plot = data_tmean[nocrop_exp]['tas'].squeeze() - data_tmean[gwl_exp]['tas'].squeeze()
-    colors = ax.pcolormesh(
-            lons,
-            lats,
-            data_to_plot,
+    colors = ax.pcolormesh(lons, lats, data_to_plot,
             cmap='seismic',
             vmin=-4,
             vmax=4,
             transform=ccrs.PlateCarree(),
             )
     ax.coastlines()
-    plt.colorbar(colors, label='$\Delta$ Surface air temperature ($^{\circ}$C)]', orientation='horizontal', pad=0.05)
+    plt.colorbar(colors,
+            label='$\Delta$ Surface air temperature ($^{\circ}$C)]',
+            orientation='horizontal',
+            pad=0.05,
+            )
     plt.title(f'{nocrop_exp} - {gwl_exp}')
     plt.savefig(f'plots/tas_{nocrop_exp}_australia_last30.png', dpi=DPI)
+
+# Significance testing of all experiments.
+shape = data_tmean[nocrop_exp]['tas'].squeeze().shape
+data_to_plot = np.ones((len(EXPERIMENTS.keys()),)+shape)*np.nan
+dataa = np.ones((len(EXPERIMENTS.keys()),)+shape)*np.nan
+datab = np.ones((len(EXPERIMENTS.keys()),)+shape)*np.nan
+i = 0
+for gwl_exp,nocrop_exp in EXPERIMENTS.items():
+    if 'duplicate' in gwl_exp: gwl_exp = 'PI-GWL-B2060'
+    data_to_plot[i] = data_tmean[nocrop_exp]['tas'].squeeze() - data_tmean[gwl_exp]['tas'].squeeze()
+    dataa[i] = data_tmean[nocrop_exp]['tas'].squeeze()
+    datab[i] = data_tmean[gwl_exp]['tas'].squeeze()
+    i += 1
+t_statistic, pvalue = stats.ttest_ind(dataa, datab, axis=0, equal_var=False)
+data_to_plot = data_to_plot.mean(axis=0)
+data_to_plot[pvalue>0.05] = np.nan
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
+colors = ax.pcolormesh(lons, lats, data_to_plot.squeeze(),
+        cmap='seismic',
+        vmin=-4,
+        vmax=4,
+        transform=ccrs.PlateCarree(),
+        )
+ax.coastlines()
+plt.colorbar(colors,
+        label='$\Delta$ Surface air temperature ($^{\circ}$C)]',
+        orientation='horizontal',
+        pad=0.05,
+        )
+plt.savefig(f'plots/tas_{nocrop_exp}_last30_sig.png', dpi=DPI)
 
 # Save figures.
 plt.figure(1)
