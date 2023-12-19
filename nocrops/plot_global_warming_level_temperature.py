@@ -51,19 +51,31 @@ COLORS = {
         }
 
 
-import numpy as _np
-def yearly_mean_from_monthly(data:_np.ndarray)->_np.ndarray:
+def yearly_mean_from_monthly(data:np.ndarray)->np.ndarray:
     """Calculate a yearly mean on a numpy array of monthly data.
     The 0th dimension must be time and divisible by 12.
     """
-    if _np.mod(data.shape[0], 12)!=0:
+    if np.mod(data.shape[0], 12)!=0:
         raise ValueError("Not enough months in 0th dimension.")
     toshape = list(data.shape)
     toshape.pop(0)
     toshape.insert(0, 12)
     toshape.insert(0, int(data.shape[0]/12))
-    fraction_of_year = _np.array([31,28,31,30,31,30,31,31,30,31,30,31])/365.0
-    return _np.average(data.reshape(toshape), axis=1, weights=fraction_of_year)
+    fraction_of_year = np.array([31,28,31,30,31,30,31,31,30,31,30,31])/365.0
+    return np.average(data.reshape(toshape), axis=1, weights=fraction_of_year)
+
+
+def my_ks_test(samp1, samp2):
+    nlats = samp1.shape[-2]
+    nlons = samp1.shape[-1]
+    statistic = np.ones((nlats,nlons))*np.nan
+    pvalue = np.ones((nlats,nlons))*np.nan
+    for j in range(nlats):
+        for i in range(nlons):
+            results = stats.ks_2samp(samp1[:,j,i], samp2[:,j,i])
+            statistic[j,i] = results.statistic
+            pvalue[j,i] = results.pvalue
+    return statistic, pvalue
 
 
 load_from_npy = True
@@ -194,7 +206,8 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     dataa[i] = data_tmean[nocrop_exp]['tas'].squeeze()
     datab[i] = data_tmean[gwl_exp]['tas'].squeeze()
     i += 1
-t_statistic, pvalue = stats.ttest_ind(dataa, datab, axis=0, equal_var=False)
+statistic, pvalue = stats.ttest_ind(dataa, datab, axis=0, equal_var=False)
+#statistic, pvalue = my_ks_test(dataa, datab)
 data_to_plot = data_to_plot.mean(axis=0)
 data_to_plot[pvalue>0.05] = np.nan
 fig = plt.figure()
@@ -212,6 +225,26 @@ plt.colorbar(colors,
         pad=0.05,
         )
 plt.savefig(f'plots/tas_{nocrop_exp}_last30_sig.png', dpi=DPI)
+
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
+australia_lonlat = [110,155,-45,-10]
+ax.set_extent(australia_lonlat, crs=ccrs.PlateCarree())
+colors = ax.pcolormesh(lons, lats, data_to_plot.squeeze(),
+        cmap='seismic',
+        vmin=-4,
+        vmax=4,
+        transform=ccrs.PlateCarree(),
+        )
+ax.coastlines()
+plt.colorbar(colors,
+        label='$\Delta$ Surface air temperature ($^{\circ}$C)]',
+        orientation='horizontal',
+        pad=0.05,
+        )
+plt.title(f'{nocrop_exp} - {gwl_exp}')
+plt.savefig(f'plots/tas_{nocrop_exp}_australia_last30_sig.png', dpi=DPI)
+
 
 # Save figures.
 plt.figure(1)
