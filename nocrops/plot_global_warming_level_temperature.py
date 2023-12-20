@@ -65,7 +65,9 @@ def yearly_mean_from_monthly(data:np.ndarray)->np.ndarray:
     return np.average(data.reshape(toshape), axis=1, weights=fraction_of_year)
 
 
-def my_ks_test(samp1, samp2):
+def my_ks_test(samp1:np.ndarray, samp2:np.ndarray)->tuple:
+    """Custom 2-dimensional Kolmogorov-Smirnov test for the goodness of fit of 2 populations.
+    """
     nlats = samp1.shape[-2]
     nlons = samp1.shape[-1]
     statistic = np.ones((nlats,nlons))*np.nan
@@ -73,6 +75,21 @@ def my_ks_test(samp1, samp2):
     for j in range(nlats):
         for i in range(nlons):
             results = stats.ks_2samp(samp1[:,j,i], samp2[:,j,i])
+            statistic[j,i] = results.statistic
+            pvalue[j,i] = results.pvalue
+    return statistic, pvalue
+
+
+def my_wilcoxon_test(samp1:np.ndarray, samp2:np.ndarray)->tuple:
+    """Custom 2-dimensional Wilcoxon test for the difference of paired samples.
+    """
+    nlats = samp1.shape[-2]
+    nlons = samp1.shape[-1]
+    statistic = np.ones((nlats,nlons))*np.nan
+    pvalue = np.ones((nlats,nlons))*np.nan
+    for j in range(nlats):
+        for i in range(nlons):
+            results = stats.wilcoxon(samp1[:,j,i] - samp2[:,j,i])
             statistic[j,i] = results.statistic
             pvalue[j,i] = results.pvalue
     return statistic, pvalue
@@ -151,7 +168,6 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     plt.xlabel('Time (years)')
     plt.ylabel('$\Delta$ Temperature ($^{\circ}$C)')
     plt.xlim(left=400)
-    #plt.ylim(bottom=0)
     plt.legend(frameon=False)
 
     # Plot the map of the difference for the last 30 years
@@ -187,7 +203,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
             )
     ax.coastlines()
     plt.colorbar(colors,
-            label='$\Delta$ Surface air temperature ($^{\circ}$C)]',
+            label='$\Delta$ Surface air temperature ($^{\circ}$C)',
             orientation='horizontal',
             pad=0.05,
             )
@@ -206,10 +222,11 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     dataa[i] = data_tmean[nocrop_exp]['tas'].squeeze()
     datab[i] = data_tmean[gwl_exp]['tas'].squeeze()
     i += 1
-statistic, pvalue = stats.ttest_ind(dataa, datab, axis=0, equal_var=False)
+#statistic, pvalue = stats.ttest_ind(dataa, datab, axis=0, equal_var=False)
 #statistic, pvalue = my_ks_test(dataa, datab)
+statistic, pvalue = stats.wilcoxon(dataa, datab, method='exact', axis=0)
 data_to_plot = data_to_plot.mean(axis=0)
-data_to_plot[pvalue>0.05] = np.nan
+data_to_plot[pvalue>0.01] = np.nan
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
 colors = ax.pcolormesh(lons, lats, data_to_plot.squeeze(),
@@ -220,7 +237,7 @@ colors = ax.pcolormesh(lons, lats, data_to_plot.squeeze(),
         )
 ax.coastlines()
 plt.colorbar(colors,
-        label='$\Delta$ Surface air temperature ($^{\circ}$C)]',
+        label='$\Delta$ Surface air temperature ($^{\circ}$C)',
         orientation='horizontal',
         pad=0.05,
         )
@@ -238,7 +255,7 @@ colors = ax.pcolormesh(lons, lats, data_to_plot.squeeze(),
         )
 ax.coastlines()
 plt.colorbar(colors,
-        label='$\Delta$ Surface air temperature ($^{\circ}$C)]',
+        label='$\Delta$ Surface air temperature ($^{\circ}$C)',
         orientation='horizontal',
         pad=0.05,
         )
