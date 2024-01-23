@@ -8,17 +8,17 @@
 \usepackage[a4paper, total={170mm,257mm}, left=20mm, top=20mm,]{geometry}
 \usepackage{svg} % Use SVGs only for final draft.
 \usepackage{float} % Allows the [H] option meaning "place figure here and only here"
-\usepackage[section]{placeins} % Defines /FloatBarrier so that figures can't move.
+\usepackage[section]{placeins} % Defines \FloatBarrier so that figures can't move.
 \usepackage{subcaption} % Allows subfigures and captions
 \usepackage{lineno} % Enable line numbers.
 \usepackage{textcomp}
 \usepackage[style=authoryear]{biblatex}
 \usepackage{amsmath}
-%\addbibresource{forestation_sensitivity_experiments.bib}
+\addbibresource{references.bib}
 \setlength{\parindent}{1cm}
 \linenumbers
 
-\title{Sensitivity experiments of Australia forestation in ACCESS-ESM1.5 under several global warming levels}
+\title{Sensitivity experiments of Australian forestation in ACCESS-ESM1.5 under several global warming levels}
 \author{Tammas Loughran et al.}
 
 \begin{document}
@@ -38,51 +38,118 @@
 
 \section{Introduction}
 
-The CO$_2$ removal potential and climate mitigation of forestation is still poorly understood for Australia.
-Integrated assessment models produced a plausible scenario of global forestation for CMIP6 but these scenarios do not have any additional forest area expansion in Australia and are therefore unsuitable for answering the question.
+Meeting the net-zero commitments of the Paris Agreement will require not only fossil fuel mitigation but also active carbon dioxide removal (CDR) strategies since some sources of greenhouse gasses are difficult to abate immediately (citations).
+Australia's long-term emissions reduction strategy relies on a large portion of its emissions reduction coming from land-based solutions to generate negative emissions, such as by forests and soil carbon (citations).
+Emerging technologies also may leverage biomass as a fuel source, which when combined with carbon capture and storage (CCS) allows for permanent removal of CO$_2$ (citations).
+The preservation for natural forests and development of managed forests is therefore a key resource to achieve net-zero by 2050, and its land-use requirements compete with agricultural requirements, particularly in an expanding population and economy (citations).
+The land-use changes required would potentially involve some abandonment of marginal traditional agricultural lands to make way for forests, either for commercial harvesting or as natural lands preservation.
+The growth of new forests can affect the climate in various ways: by carbon assimilation with contributed to the reduction of atmospheric CO$_2$ concentrations, and by altering physical surface properties which in turn may either warm or cool surface temperatures and alter the hydrological cycle (citations).
 
-We need additional simulations to answer these questions.
-Furthermore, we do not have projections under stanble climates at different global warming levels that are consistent with the Paris agreement targets.
+The CO$_2$ removal potential and climate mitigation of forestation is still poorly understood for Australia.
+Integrated assessment models in the past have provided plausible scenarios of global forestation for CMIP6 but these scenarios do not have any additional forest area expansion in Australia \cite{loughran-limited-nodate} and are therefore unsuitable for investigating the CDR potential of Australian forests and the biogeophysical impacts.
+Furthermore, we do not have projections under stable climates at different global warming levels that are consistent with the Paris agreement targets.
 In fact, how ACCESS responds to forestation in general is still poorly understood and fundamental land-use change experiments are needed.
+
+Research questions:
+\begin{itemize}
+\item How does the ACCESS-ESM respond (carbon/climate) to a large change in land-use (abandonment: crops → trees)?
+\item Restart from pre-industrial and present day climate. This will be useful for demonstrating what the sensitivity is under different climate states.
+\item How sensitive are these changes in forestation to the prevailing climate state? Run no-crop simulations at different global warming levels.
+\item What are the productivities of different tree types in different regions and how do they affect temperature and precipitation?
+\end{itemize}
 
 \section{Methods}
 
-Description of ACCESS. where are dominant PFTs
-Description of crop removal and replacement with trees
+ACCESS-ESM1-5 is a fully coupled Earth system model that includes a fully interactive carbon cycle.
+It is composed of the UM atmosphere, the MOM ocean model with WOMBAT ocean biogeochemistry and CABLE for land surface.
+The land surface vegetation is represented as sub-grid fractional tiles.
+Figure \ref{fig:dominant_pfts} demonstrates the largest plant functional type or land surface type at each grid-cell
+
+\begin{figure}[H]
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{../plots/cable_dominant_tiles.png}
+    \end{subfigure}
+    \caption{CABLE dominant PFTs}
+    \label{fig:dominant_pfts}
+\end{figure}
+
+The procedure for replacing crops with trees is summarized in \ref{fig:to_forest}.
+For each grid-cell, crops are removed by setting the tile fraction for all croplands to 0
+The forest biome plant functional type fractions are increased by the same amount, while maintaining the relative proportions of the tree types in that grid cell.
+If, for a given grid-cell there are crops but no trees, then trees are allocated to the crop fractions using the proportions of the nearest forested grid-cell.
+If resulting tree fractions are below a threshold (Veg0), then that grid-cell has crops replaced with the dominant tree type from the nearest grid-cell that has trees.
+
+\begin{figure}[H]
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=0.5\linewidth]{../plots/crop_to_forest1.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=0.5\linewidth]{../plots/nearest_forest.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=0.5\linewidth]{../plots/minimum.png}
+    \end{subfigure}
+    \caption{Replace crops}
+    \label{fig:to_forest}
+\end{figure}
+
 
 \subsection{Experiments}
 
-\begin{itemize}
-\item piControl
-\item piControl-no-crops
-\item GWL branching points
-\item GWL branching points without crops
-\end{itemize}
+\begin{table}[]
+\begin{tabular}{lllll}
+\hline
+Exp name             & Run length & Branches from & Forestation on               & Compared to       \\ \hline
+esm-esm-piNoCrops    & 100 years  & piControl     & all crops                    & esm-piControl     \\
+Esm-esm-piNoCrops-02 & 50 years   & piControl     & all crops                    & esm-piControl     \\
+GWL-NoCrops-B2030    & 200 years  & PI-GWL-t6     & all crops                    & PI-GWL-t6         \\
+GWL-NoCrops-B2030-02 & 176 years  & PI-GWL-t6     & all crops                    & PI-GWL-t6         \\
+GWL-NoCrops-B2035    & 100 years  & PI-GWL-B2035  & all crops                    & PI-GWL-B2035      \\
+GWL-NoCrops-B2040    & 100 years  & PI-GWL-B2040  & all crops                    & PI-GWL-B2040      \\
+GWL-NoCrops-B2045    & 100 years  & PI-GWL-B2045  & all crops                    & PI-GWL-B2045      \\
+GWL-NoCrops-B2050    & 100 years  & PI-GWL-B2050  & all crops                    & PI-GWL-B2050      \\
+GWL-NoCrops-B2055    & 100 years  & PI-GWL-B2055  & all crops                    & PI-GWL-B2055      \\
+GWL-NoCrops-B2060    & 100 years  & Pi-GWL-B2060  & all crops                    & Pi-GWL-B2060      \\
+GWL-NoCr-B2060-02    & 100 years  & Pi-GWL-B2060  & all crops                    & Pi-GWL-B2060      \\
+GWL-EqFor-B2060      & 100 years  & Pi-GWL-B2060  & Only GWL-NoCrops-B2030 crops & Pi-GWL-B2060      \\
+GWL-EGNL-B2030       & 100 years  & PI-GWL-t6     & all crops                    & PI-GWL-t6         \\
+GWL-EGBL-B2030       & 100 years  & PI-GWL-t6     & all crops                    & PI-GWL-t6         \\
+GWL-DCBL-B2030       & 100 years  & PI-GWL-t6     & all crops                    & PI-GWL-t6         \\
+GWL-50pc-B2030       & 100 years  & PI-GWL-t6     & 50\% of croplands            & PI-GWL-t6         \\
+GWL-10pc-B2030       & 100 years  & PI-GWL-t6     & 10\% of croplands            & PI-GWL-t6         \\
+GWL-CO2only-B2030    & 100 years  & PI-GWL-t6     & all crops                    & GWL-NoCrops-B2030 \\ \hline
+\end{tabular}
+\end{table}
 
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \includegraphics[width=\linewidth]{../plots/Forestation_on_crops.png}
+    \end{subfigure}
+    \caption{Regions of forestation in the no-crop experiments.}
+    \label{fig:forestation_on_crops}
+\end{figure}
 
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
-        \includegraphics[width=\linewidth]{../plots/crop_to_forest1.png}
+        \includegraphics[width=\linewidth]{../plots/experiment_branching.png}
     \end{subfigure}
-    \caption{replace crops}
-    \label{fig:to_forest}
+    \caption{Diagram of experiment branching points.}
+    \label{fig:experiment_branching}
 \end{figure}
+
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
-        \includegraphics[width=\linewidth]{../plots/nearest_forest.png}
+        \includegraphics[width=\linewidth]{../plots/forestation_sensitivity_amount.png}
     \end{subfigure}
-    \caption{replace crops}
-    \label{fig:nearest_forest}
-\end{figure}
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[b]{\linewidth}
-        \includegraphics[width=\linewidth]{../plots/minimum.png}
-    \end{subfigure}
-    \caption{replace crops}
-    \label{fig:minimum}
+    \caption{Area extent of total global existing forests in each simulation (dark green) and the additional forestation replacing crop lands (light green).}
+    \label{fig:forestation_ammount}
 \end{figure}
 
 \subsection{Statistical methods}
@@ -100,15 +167,78 @@ Description of crop removal and replacement with trees
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
+        \includegraphics[width=\linewidth]{../plots/cLand_GWL_gloabl_sum.png}
+    \end{subfigure}
+    \caption{Global sum of the total land carbon content difference between the global warming level simulations and the forestation experiments.}
+    \label{fig:global_cLand}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \includegraphics[width=\linewidth]{../plots/cpools_gloabl_sum.png}
+    \end{subfigure}
+    \caption{Global sum of the carbon pools' difference between the global warming level simulations and the forestation experiments.}
+    \label{fig:global_cpools}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \includegraphics[width=\linewidth]{../plots/cLand_GWL-NoCrops-B2050_last20.png}
+    \end{subfigure}
+    \caption{Global map of 2070--2100 mean total land carbon content difference between the global warming level simulations and the forestation experiments 2050 branching point.}
+    \label{fig:map_cLand}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \includegraphics[width=\linewidth]{../plots/cLand_GWL-NoCrops-B2050_australia_last20.png}
+    \end{subfigure}
+    \caption{Australian map of 2070--2100 mean total land carbon content difference between the global warming level simulations and the forestation experiments 2050 branching point.}
+    \label{fig:aus_map_cLand}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \includegraphics[width=\linewidth]{../plots/cLand_GWL_australia_sum.png}
+    \end{subfigure}
+    \caption{Australian sum of the total land carbon content difference between the global warming level simulations and the forestation experiments.}
+    \label{fig:australia_cLand}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
         \includesvg[width=\linewidth]{../plots/co2_global_warming_level_no_crops.svg}
     \end{subfigure}
-    \caption{replace crops}
+    \caption{Global mean surface CO$_2$ concentrations for each experiment. Thin lines are the standard global warming level simulations. Bold lines are the forestation experiments.}
     \label{fig:global_co2}
 \end{figure}
 
 \subsection{Climate}
 
-[Placeholder]
+\subsubsection{Pre-industrial}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \includegraphics[width=\linewidth]{../plots/tas_timeseries.png}
+    \end{subfigure}
+    \caption{Global mean surface temperature for the piControl simulation and the piNoCrops simulation.}
+    \label{fig:pre-industrial_temperature_tseries}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \includegraphics[width=\linewidth]{../plots/temperature_diff.png}
+    \end{subfigure}
+    \caption{Surface temperature difference between the piControl simulation and the piNoCrops simulation, averaged over the last 20 years of each simulation.}
+    \label{fig:pre-industrial_temperature_map}
+\end{figure}
 
 \section{Discussion}
 
@@ -118,11 +248,11 @@ Description of crop removal and replacement with trees
 
 [Placeholder]
 
-%\printbibliography
+\printbibliography
 
 \section{Supplementary Material}
 \setcounter{figure}{0}
 
 
-\end{document}
 
+\end{document}
