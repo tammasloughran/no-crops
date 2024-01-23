@@ -16,12 +16,12 @@ import cdo_decorators as cdod
 EXPERIMENTS = [
         'PI-GWL-t6',
         'GWL-NoCrops-B2030',
-        'GWL-EGNL-B2030',
-        'GWL-EGBL-B2030',
-        'GWL-DCBL-B2030',
-        #'GWL-10pct-B2030',
-        #'GWL-25pct-B2030',
-        #'GWL-50pct-B2030',
+        #'GWL-EGNL-B2030',
+        #'GWL-EGBL-B2030',
+        #'GWL-DCBL-B2030',
+        'GWL-10pct-B2030',
+        'GWL-25pct-B2030',
+        'GWL-50pct-B2030',
         ]
 ARCHIVE_DIR = '/g/data/p66/tfl561/archive_data'
 WOODFIG = 1
@@ -30,13 +30,13 @@ RAW_CMIP_DIR = '/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5'
 RAW_NOCROP_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
 LABELS = {
         'PI-GWL-t6':'Global warming level',
-        'GWL-NoCrops-B2030':'Mixed forest',
-        #'GWL-10pct-B2030':'10%',
-        #'GWL-25pct-B2030':'25%',
-        #'GWL-50pct-B2030':'50%',
-        'GWL-EGNL-B2030':'Evergreen needle leaf',
-        'GWL-EGBL-B2030':'Evergreen broad leaf',
-        'GWL-DCBL-B2030':'Deciduous broad leaf',
+        'GWL-NoCrops-B2030':'100%',
+        'GWL-10pct-B2030':'10%',
+        'GWL-25pct-B2030':'25%',
+        'GWL-50pct-B2030':'50%',
+        #'GWL-EGNL-B2030':'Evergreen needle leaf',
+        #'GWL-EGBL-B2030':'Evergreen broad leaf',
+        #'GWL-DCBL-B2030':'Deciduous broad leaf',
         }
 COLORS = {
         'PI-GWL-t6':'black',
@@ -92,5 +92,5 @@ for exper in EXPERIMENTS:
 plt.legend()
 plt.ylabel('cWood [Pg(C)]')
 plt.xlabel('Year')
-plt.savefig('plots/cWood_single_pft_forestation.png', dpi=200)
+plt.savefig('plots/cWood_partial_forestation.png', dpi=200)
 
