@@ -80,21 +80,6 @@ def my_ks_test(samp1:np.ndarray, samp2:np.ndarray)->tuple:
     return statistic, pvalue
 
 
-def my_wilcoxon_test(samp1:np.ndarray, samp2:np.ndarray)->tuple:
-    """Custom 2-dimensional Wilcoxon test for the difference of paired samples.
-    """
-    nlats = samp1.shape[-2]
-    nlons = samp1.shape[-1]
-    statistic = np.ones((nlats,nlons))*np.nan
-    pvalue = np.ones((nlats,nlons))*np.nan
-    for j in range(nlats):
-        for i in range(nlons):
-            results = stats.wilcoxon(samp1[:,j,i] - samp2[:,j,i])
-            statistic[j,i] = results.statistic
-            pvalue[j,i] = results.pvalue
-    return statistic, pvalue
-
-
 load_from_npy = True
 
 # Load lats and lons.
