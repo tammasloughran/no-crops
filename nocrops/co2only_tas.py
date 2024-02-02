@@ -75,17 +75,17 @@ examplenc.close()
 
 # Temperature maps as anomaly from the reference experiment.
 tas_ref = load_last_30(input=TAS_REF_FILENAME, var='tas')
-tas_bgc = tas_ref - load_last_30(input=TAS_BGC_FILENAME, var='tas')
-tas_total = tas_ref - load_last_30(input=TAS_TOTAL_FILENAME, var='tas')
+tas_bgc = load_last_30(input=TAS_BGC_FILENAME, var='tas') - tas_ref
+tas_total = load_last_30(input=TAS_TOTAL_FILENAME, var='tas') - tas_ref
 # The biogeophysical component is the total (GWL-NoCrops-B2030) minus the biogeochemical component.
 tas_bgp = tas_total - tas_bgc
 
 # Temperture time series as anomaly from the reference experiment
 tas_tseries_ref = load_time_series(input=TAS_REF_FILENAME, var='tas')
 bgc_simulation = load_time_series(input=TAS_BGC_FILENAME, var='tas')
-tas_tseries_bgc = sub_trim(tas_tseries_ref, bgc_simulation)
+tas_tseries_bgc = sub_trim(bgc_simulation, tas_tseries_ref)
 total_simulation = load_time_series(input=TAS_TOTAL_FILENAME, var='tas')
-tas_tseries_total = sub_trim(tas_tseries_ref, total_simulation)
+tas_tseries_total = sub_trim(total_simulation, tas_tseries_ref)
 tas_tseries_bgp = sub_trim(tas_tseries_total, tas_tseries_bgc)
 
 # Plot the time series of temperature

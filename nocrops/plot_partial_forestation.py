@@ -9,19 +9,17 @@ import sys
 from contrib.tools import global_mean
 from cdo import Cdo
 cdo = Cdo()
-cdo.debug = True
+cdo.debug = False
 import cdo_decorators as cdod
+import ipdb
 
 
 EXPERIMENTS = [
         'PI-GWL-t6',
         'GWL-NoCrops-B2030',
-        #'GWL-EGNL-B2030',
-        #'GWL-EGBL-B2030',
-        #'GWL-DCBL-B2030',
-        'GWL-10pct-B2030',
-        'GWL-25pct-B2030',
         'GWL-50pct-B2030',
+        'GWL-25pct-B2030',
+        'GWL-10pct-B2030',
         ]
 ARCHIVE_DIR = '/g/data/p66/tfl561/archive_data'
 WOODFIG = 1
@@ -34,9 +32,6 @@ LABELS = {
         'GWL-10pct-B2030':'10%',
         'GWL-25pct-B2030':'25%',
         'GWL-50pct-B2030':'50%',
-        #'GWL-EGNL-B2030':'Evergreen needle leaf',
-        #'GWL-EGBL-B2030':'Evergreen broad leaf',
-        #'GWL-DCBL-B2030':'Deciduous broad leaf',
         }
 COLORS = {
         'PI-GWL-t6':'black',
@@ -53,15 +48,14 @@ COLORS = {
 plt.figure(WOODFIG)
 data = {}
 for exper in EXPERIMENTS:
-    fractions_file = glob.glob(f'{ARCHIVE_DIR}/{exper}/frac_{exper}_*.nc')[0]
+    fractions_file = glob.glob(f'{ARCHIVE_DIR}/{exper}/frac_*.nc')[0]
 
 
     @cdod.cdo_mul(input2=fractions_file) # This experiment's cover fractions
-    @cdod.cdo_mul(input2='data/cell_area.nc') # g
-    @cdod.cdo_divc('100') # Fractions file is in %
+    @cdod.cdo_mul(input2='data/cell_area.nc') # -> g(C)
     @cdod.cdo_fldsum
     @cdod.cdo_vertsum()
-    @cdod.cdo_divc('1e15') # Pg(C)
+    @cdod.cdo_divc('1e15') # -> Pg(C)
     @cdod.cdo_yearmonmean
     def cdo_load(var:str, input:str)->np.ma.MaskedArray:
         """Load global sum of a variable using CDO.
@@ -73,24 +67,25 @@ for exper in EXPERIMENTS:
                 ).variables[var][:].squeeze()
 
 
-    # Load the cWood
-    print("Loading cWood", exper)
-    files = sorted(glob.glob(f'{ARCHIVE_DIR}/{exper}/cWood_{exper}_*'))
+    # Load the cLand
+    print("Loading cLand", exper)
+    files = sorted(glob.glob(f'{ARCHIVE_DIR}/{exper}/cLand_*'))
 
     # Load data
-    data[exper] = cdo_load(input=files[0], var='cWood')
+    data[exper] = cdo_load(input=files[0], var='cLand')
 
     # Plot
     length = len(data[exper])
     dates = np.arange(length)#/12.0
     if not exper=='PI-GWL-t6':
-        plt.plot(dates, data[exper]-data['PI-GWL-t6'][:length],
+        plt.plot(dates, data[exper] - data['PI-GWL-t6'][:length],
                 color=COLORS[exper],
                 label=LABELS[exper],
                 )
 
-plt.legend()
-plt.ylabel('cWood [Pg(C)]')
+plt.legend(frameon=False)
+plt.ylabel('$\Delta$cLand [Pg(C)]')
 plt.xlabel('Year')
-plt.savefig('plots/cWood_partial_forestation.png', dpi=200)
+plt.savefig('plots/cLand_partial_forestation.png', dpi=200)
 
+plt.show()

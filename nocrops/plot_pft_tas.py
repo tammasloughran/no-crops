@@ -59,10 +59,10 @@ def cdo_load_map(var:str, input:str)->np.ma.MaskedArray:
     return cdo.copy(input=input, options='-L', returnCdf=True).variables[var][:].squeeze()
 
 
-def moving_average(x:np.ndarray, w:int)->np.ndarray:
-    """Calculate a moving average using a window of size w.
+def moving_average(x:np.ndarray, window:int)->np.ndarray:
+    """Calculate a moving average using a window of size `window`.
     """
-    return np.convolve(x, np.ones(w), 'valid')/w
+    return np.convolve(x, np.ones(window), mode='valid')/window
 
 
 # Load grid data.
@@ -77,8 +77,8 @@ plt.figure(TASFIG)
 data = {}
 maps = {}
 for exper in EXPERIMENTS:
-    # Load the cWood
-    print("Loading cWood", exper)
+    # Load the tas data
+    print("Loading TAS", exper)
     files = sorted(glob.glob(f'{ARCHIVE_DIR}/{exper}/tas_{exper}_*'))
 
     # Load data
@@ -90,27 +90,28 @@ for exper in EXPERIMENTS:
     length = len(data[exper])
     dates = np.arange(length)
     if not exper=='PI-GWL-t6':
-        plt.plot(dates, data[exper]-data['PI-GWL-t6'][:length],
+        plt.plot(dates, data[exper] - data['PI-GWL-t6'][:length],
                 color=COLORS[exper],
-                label=LABELS[exper],
                 alpha=0.4,
                 )
-        plt.plot(dates[15:-14], moving_average(data[exper]-data['PI-GWL-t6'][:length], 30),
+        plt.plot(dates[15:-14], moving_average(data[exper] - data['PI-GWL-t6'][:length], 30),
                 color=COLORS[exper],
                 label=LABELS[exper],
                 )
 
 
 plt.figure(TASFIG)
-plt.legend()
-plt.ylabel('TAS ($^{\circ}$C)')
+plt.legend(frameon=False)
+plt.ylabel('$i\Delta$TAS ($^{\circ}$C)')
 plt.xlabel('Year')
 plt.savefig('plots/tas_single_pft_forestation.png', dpi=200)
 
 
-def plot_map(data, title):
+def plot_map(data:np.ndarray, title:str)->None:
+    """Plot a global map pf surface air temperature.
+    """
     ax = plt.axes(projection=ccrs.Robinson())
-    discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-4.5, 5, 1), ncolors=256)
+    discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-3.25, 3.5, 0.5), ncolors=256)
     shading = plt.pcolormesh(lons, lats, data,
             cmap='bwr',
             norm=discrete_bins,
@@ -121,20 +122,21 @@ def plot_map(data, title):
     ax.coastlines()
     plt.colorbar(shading,
             label='$\Delta$TAS $^{\circ}$C',
-            ticks=np.arange(-4, 5, 1),
+            ticks=np.arange(-3, 3.5, 0.5),
             orientation='horizontal',
             pad=0.05,
             )
     plt.title(title)
 
+
 plt.figure(2)
 plot_map(maps['GWL-EGBL-B2030'] - maps['PI-GWL-t6'], 'Evergreen broadleaf')
-plt.savefig('tas_EGBL_map.png', dpi=200)
+plt.savefig('plots/tas_EGBL_map.png', dpi=200)
 plt.figure(3)
 plot_map(maps['GWL-EGNL-B2030'] - maps['PI-GWL-t6'], 'Evergreen needleleaf')
-plt.savefig('tas_EGNL_map.png', dpi=200)
+plt.savefig('plots/tas_EGNL_map.png', dpi=200)
 plt.figure(4)
 plot_map(maps['GWL-DCBL-B2030'] - maps['PI-GWL-t6'], 'Deciduous broadleaf')
-plt.savefig('tas_DCBL_map.png', dpi=200)
+plt.savefig('plots/tas_DCBL_map.png', dpi=200)
 
 plt.show()
