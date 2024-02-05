@@ -36,11 +36,8 @@ LABELS = {
 COLORS = {
         'PI-GWL-t6':'black',
         'GWL-NoCrops-B2030':'blue',
-        'GWL-EGNL-B2030':'lightgreen',
-        'GWL-EGBL-B2030':'darkgreen',
-        'GWL-DCBL-B2030':'orange',
         'GWL-10pct-B2030':'lightgreen',
-        'GWL-25pct-B2030':'green',
+        'GWL-25pct-B2030':'forestgreen',
         'GWL-50pct-B2030':'darkgreen',
         }
 

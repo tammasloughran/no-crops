@@ -114,18 +114,42 @@ def plot_map(data:np.ndarray, title:str)->None:
     discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-3.25, 3.5, 0.5), ncolors=256)
     shading = plt.pcolormesh(lons, lats, data,
             cmap='bwr',
+            edgecolors='face',
+            linewidth=0.2,
             norm=discrete_bins,
             transform=ccrs.PlateCarree(),
-            linewidth=0.2,
-            edgecolors='face',
             )
-    ax.coastlines()
     plt.colorbar(shading,
             label='$\Delta$TAS $^{\circ}$C',
-            ticks=np.arange(-3, 3.5, 0.5),
             orientation='horizontal',
             pad=0.05,
+            ticks=np.arange(-3, 3.5, 0.5),
             )
+    ax.coastlines()
+    plt.title(title)
+
+
+def plot_australia(data:np.ndarray, title:str)->None:
+    """Plot a map of Asutralia temperature anomalies.
+    """
+    plt.figure()
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    ax.set_extent([110, 160, -45, -10], crs=ccrs.PlateCarree())
+    discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-2.1, 2.2, 0.2), ncolors=256)
+    shading = ax.pcolormesh(lons, lats, data,
+            cmap='bwr',
+            edgecolors='face',
+            linewidth=0.2,
+            norm=discrete_bins,
+            transform=ccrs.PlateCarree(),
+            )
+    cbar = plt.colorbar(shading,
+            label='TAS ($^{\circ}$C)',
+            orientation='horizontal',
+            pad=0.05,
+            ticks=[-2, -1.5, -1, -.5, .5, 1, 1.5, 2],
+            )
+    ax.coastlines()
     plt.title(title)
 
 
@@ -138,5 +162,16 @@ plt.savefig('plots/tas_25pct_map.png', dpi=200)
 plt.figure(4)
 plot_map(maps['GWL-50pct-B2030'] - maps['PI-GWL-t6'], 'Forestation on 50% of crops')
 plt.savefig('plots/tas_50pct_map.png', dpi=200)
+
+
+plt.figure(5)
+plot_australia(maps['GWL-10pct-B2030'] - maps['PI-GWL-t6'], 'Forestation on 10% of crops')
+plt.savefig('plots/tas_10pct_australia.png', dpi=200)
+plt.figure(6)
+plot_australia(maps['GWL-25pct-B2030'] - maps['PI-GWL-t6'], 'Forestation on 25% of crops')
+plt.savefig('plots/tas_25pct_australia.png', dpi=200)
+plt.figure(7)
+plot_australia(maps['GWL-50pct-B2030'] - maps['PI-GWL-t6'], 'Forestation on 50% of crops')
+plt.savefig('plots/tas_50pct_australia.png', dpi=200)
 
 plt.show()
