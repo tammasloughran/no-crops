@@ -129,6 +129,29 @@ def plot_map(data:np.ndarray, title:str)->None:
     plt.title(title)
 
 
+def plot_australia(data:np.ndarray, title:str)->None:
+    """Plot a map of Asutralia temperature anomalies.
+    """
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    ax.set_extent([110, 160, -45, -10], crs=ccrs.PlateCarree())
+    discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-2.1, 2.2, 0.2), ncolors=256)
+    shading = ax.pcolormesh(lons, lats, data,
+            cmap='bwr',
+            edgecolors='face',
+            linewidth=0.2,
+            norm=discrete_bins,
+            transform=ccrs.PlateCarree(),
+            )
+    cbar = plt.colorbar(shading,
+            label='TAS ($^{\circ}$C)',
+            orientation='horizontal',
+            pad=0.05,
+            ticks=[-2, -1.5, -1, -.5, .5, 1, 1.5, 2],
+            )
+    ax.coastlines()
+    plt.title(title)
+
+
 plt.figure(2)
 plot_map(maps['GWL-EGBL-B2030'] - maps['PI-GWL-t6'], 'Evergreen broadleaf')
 plt.savefig('plots/tas_EGBL_map.png', dpi=200)
@@ -138,5 +161,15 @@ plt.savefig('plots/tas_EGNL_map.png', dpi=200)
 plt.figure(4)
 plot_map(maps['GWL-DCBL-B2030'] - maps['PI-GWL-t6'], 'Deciduous broadleaf')
 plt.savefig('plots/tas_DCBL_map.png', dpi=200)
+
+plt.figure(5)
+plot_australia(maps['GWL-EGBL-B2030'] - maps['PI-GWL-t6'], 'Evergreen broadleaf')
+plt.savefig('plots/tas_EGBL_australia.png', dpi=200)
+plt.figure(6)
+plot_australia(maps['GWL-EGNL-B2030'] - maps['PI-GWL-t6'], 'Evergreen needleleaf')
+plt.savefig('plots/tas_EGNL_australia.png', dpi=200)
+plt.figure(7)
+plot_australia(maps['GWL-DCBL-B2030'] - maps['PI-GWL-t6'], 'Deciduous broadleaf')
+plt.savefig('plots/tas_DCBL_australia.png', dpi=200)
 
 plt.show()

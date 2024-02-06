@@ -132,7 +132,6 @@ def plot_map(data:np.ndarray, title:str)->None:
 def plot_australia(data:np.ndarray, title:str)->None:
     """Plot a map of Asutralia temperature anomalies.
     """
-    plt.figure()
     ax = plt.axes(projection=ccrs.PlateCarree())
     ax.set_extent([110, 160, -45, -10], crs=ccrs.PlateCarree())
     discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-2.1, 2.2, 0.2), ncolors=256)
