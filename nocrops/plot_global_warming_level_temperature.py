@@ -8,6 +8,7 @@ import cartopy.crs as ccrs
 import cdo_decorators as cdod
 import ipdb
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import netCDF4 as nc
 import numpy as np
 from cdo import Cdo
@@ -159,15 +160,18 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     difference = data_tmean[nocrop_exp]['tas'].squeeze() - data_tmean[gwl_exp]['tas'].squeeze()
     fig2 = plt.figure()
     ax = fig2.add_subplot(1, 1, 1, projection=ccrs.Robinson())
+    discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-2.1, 2.2, 0.2), ncolors=256)
     colors = ax.pcolormesh(lons, lats, difference,
             cmap='seismic',
-            vmin=-4,
-            vmax=4,
+            #vmin=-4,
+            #vmax=4,
+            norm=discrete_bins,
             transform=ccrs.PlateCarree(),
             )
     ax.coastlines()
     plt.colorbar(colors,
             label='$\Delta$ temperature ($^{\circ}$C)',
+            ticks=[-2, -1.5, -1, -.5, .5, 1, 1.5, 2],
             orientation='horizontal',
             pad=0.05,
             )
@@ -180,16 +184,19 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     australia_lonlat = [110,155,-45,-10]
     ax.set_extent(australia_lonlat, crs=ccrs.PlateCarree())
     data_to_plot = data_tmean[nocrop_exp]['tas'].squeeze() - data_tmean[gwl_exp]['tas'].squeeze()
+    discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-2.1, 2.2, 0.2), ncolors=256)
     colors = ax.pcolormesh(lons, lats, data_to_plot,
             cmap='seismic',
-            vmin=-4,
-            vmax=4,
+            #vmin=-4,
+            #vmax=4,
+            norm=discrete_bins,
             transform=ccrs.PlateCarree(),
             )
     ax.coastlines()
     plt.colorbar(colors,
             label='$\Delta$ Surface air temperature ($^{\circ}$C)',
             orientation='horizontal',
+            ticks=[-2, -1.5, -1, -.5, .5, 1, 1.5, 2],
             pad=0.05,
             )
     plt.title(f'{nocrop_exp} - {gwl_exp}')

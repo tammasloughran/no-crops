@@ -111,7 +111,7 @@ def plot_map(data:np.ndarray, title:str)->None:
     """Plot a global map pf surface air temperature.
     """
     ax = plt.axes(projection=ccrs.Robinson())
-    discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-3.25, 3.5, 0.5), ncolors=256)
+    discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-2.1, 2.2, 0.2), ncolors=256)
     shading = plt.pcolormesh(lons, lats, data,
             cmap='bwr',
             edgecolors='face',
@@ -123,7 +123,7 @@ def plot_map(data:np.ndarray, title:str)->None:
             label='$\Delta$TAS $^{\circ}$C',
             orientation='horizontal',
             pad=0.05,
-            ticks=np.arange(-3, 3.5, 0.5),
+            ticks=[-2, -1.5, -1, -.5, .5, 1, 1.5, 2],
             )
     ax.coastlines()
     plt.title(title)

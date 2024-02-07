@@ -113,7 +113,7 @@ def plot_map(data:np.ndarray, title:str)->None:
     ax = plt.axes(projection=ccrs.Robinson())
     discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-3.25, 3.5, 0.5), ncolors=256)
     shading = plt.pcolormesh(lons, lats, data,
-            cmap='bwr',
+            cmap='bwr_r',
             norm=discrete_bins,
             transform=ccrs.PlateCarree(),
             linewidth=0.2,
@@ -136,7 +136,7 @@ def plot_australia(data:np.ndarray, title:str)->None:
     ax.set_extent([110, 160, -45, -10], crs=ccrs.PlateCarree())
     discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-3.25, 3.5, 0.5), ncolors=256)
     shading = ax.pcolormesh(lons, lats, data,
-            cmap='bwr',
+            cmap='bwr_r',
             edgecolors='face',
             linewidth=0.2,
             norm=discrete_bins,
