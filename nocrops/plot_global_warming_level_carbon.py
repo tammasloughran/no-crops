@@ -228,7 +228,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     ax.coastlines()
     plt.colorbar(colors,
             ticks=np.arange(-0.6, 0.6+0.1, 0.1),
-            label='$\Delta$ cLand (Pg)',
+            label='$\Delta$cLand [Pg(C)]',
             orientation='horizontal',
             pad=0.05,
             )

@@ -13,14 +13,15 @@ from cdo import Cdo
 cdo = Cdo()
 cdo.debug = False
 import cdo_decorators as cdod
+import ipdb
 
 
 EXPERIMENTS = [
         'PI-GWL-t6',
         'GWL-NoCrops-B2030',
-        'GWL-EGNL-B2030',
-        'GWL-EGBL-B2030',
-        'GWL-DCBL-B2030',
+        'GWL-50pct-B2030',
+        'GWL-25pct-B2030',
+        'GWL-10pct-B2030',
         ]
 ARCHIVE_DIR = '/g/data/p66/tfl561/archive_data'
 WOODFIG = 1
@@ -30,19 +31,18 @@ RAW_CMIP_DIR = '/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5'
 RAW_NOCROP_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
 LABELS = {
         'PI-GWL-t6':'Global warming level',
-        'GWL-NoCrops-B2030':'Mixed forest',
-        'GWL-EGNL-B2030':'Evergreen needle leaf',
-        'GWL-EGBL-B2030':'Evergreen broad leaf',
-        'GWL-DCBL-B2030':'Deciduous broad leaf',
+        'GWL-NoCrops-B2030':'100%',
+        'GWL-10pct-B2030':'10%',
+        'GWL-25pct-B2030':'25%',
+        'GWL-50pct-B2030':'50%',
         }
 COLORS = {
         'PI-GWL-t6':'black',
         'GWL-NoCrops-B2030':'blue',
-        'GWL-EGNL-B2030':'lightgreen',
-        'GWL-EGBL-B2030':'darkgreen',
-        'GWL-DCBL-B2030':'orange',
+        'GWL-10pct-B2030':'lightgreen',
+        'GWL-25pct-B2030':'forestgreen',
+        'GWL-50pct-B2030':'darkgreen',
         }
-VARIABLE = 'cLand'
 
 
 def plot_australia(data:np.ndarray, title:str)->None:
@@ -140,13 +140,14 @@ for exper in EXPERIMENTS:
                 returnCdf=True,
                 ).variables[var][:].squeeze()
 
-    # Load the data
-    print(f"Loading {VARIABLE}", exper)
-    files = sorted(glob.glob(f'{ARCHIVE_DIR}/{exper}/{VARIABLE}_*'))
+
+    # Load the cLand
+    print("Loading cLand", exper)
+    files = sorted(glob.glob(f'{ARCHIVE_DIR}/{exper}/cLand_*'))
 
     # Load data
-    data[exper] = cdo_load(input=files[0], var=VARIABLE)
-    maps[exper] = cdo_load_last30(input=files[0], var=VARIABLE)
+    data[exper] = cdo_load(input=files[0], var='cLand')
+    maps[exper] = cdo_load_last30(input=files[0], var='cLand')
 
     # Plot
     length = len(data[exper])
@@ -158,28 +159,28 @@ for exper in EXPERIMENTS:
                 )
 
 plt.legend(frameon=False)
-plt.ylabel(f'{VARIABLE} [Pg(C)]')
+plt.ylabel('$\Delta$cLand [Pg(C)]')
 plt.xlabel('Year')
-plt.savefig(f'plots/{VARIABLE}_single_pft_forestation.png', dpi=200)
+plt.savefig('plots/cLand_partial_forestation.png', dpi=200)
 
 plt.figure()
-plot_map(maps['GWL-EGNL-B2030'] - maps['PI-GWL-t6'], title='Evergreen needle leaf')
-plt.savefig('plots/cLand_EGNL_last30.png', dpi=200)
+plot_map(maps['GWL-10pct-B2030'] - maps['PI-GWL-t6'], title='10%')
+plt.savefig('cLand_10pct_last30.png', dpi=200)
 plt.figure()
-plot_map(maps['GWL-EGBL-B2030'] - maps['PI-GWL-t6'], title='Evergreen broad leaf')
-plt.savefig('plots/cLand_EGBL_last30.png', dpi=200)
+plot_map(maps['GWL-25pct-B2030'] - maps['PI-GWL-t6'], title='25%')
+plt.savefig('cLand_25pct_last30.png', dpi=200)
 plt.figure()
-plot_map(maps['GWL-DCBL-B2030'] - maps['PI-GWL-t6'], title='Deciduous broad leaf')
-plt.savefig('plots/cLand_DCBL_last30.png', dpi=200)
+plot_map(maps['GWL-50pct-B2030'] - maps['PI-GWL-t6'], title='50%')
+plt.savefig('cLand_50pct_last30.png', dpi=200)
 
 plt.figure()
-plot_australia(maps['GWL-EGNL-B2030'] - maps['PI-GWL-t6'], title='Evergreen needle leaf')
-plt.savefig('plots/cLand_EGNL_australia.png', dpi=200)
+plot_australia(maps['GWL-10pct-B2030'] - maps['PI-GWL-t6'], title='10%')
+plt.savefig('cLand_10pct_australia.png', dpi=200)
 plt.figure()
-plot_australia(maps['GWL-EGBL-B2030'] - maps['PI-GWL-t6'], title='Evergreen broad leaf')
-plt.savefig('plots/cLand_EGBL_australia.png', dpi=200)
+plot_australia(maps['GWL-25pct-B2030'] - maps['PI-GWL-t6'], title='25%')
+plt.savefig('cLand_25pct_australia.png', dpi=200)
 plt.figure()
-plot_australia(maps['GWL-DCBL-B2030'] - maps['PI-GWL-t6'], title='Deciduous broad leaf')
-plt.savefig('plots/cLand_DCBL_australia.png', dpi=200)
+plot_australia(maps['GWL-50pct-B2030'] - maps['PI-GWL-t6'], title='50%')
+plt.savefig('cLand_50pct_australia.png', dpi=200)
 
 plt.show()
