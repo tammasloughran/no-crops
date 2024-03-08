@@ -1,18 +1,18 @@
 #!/usr/env python3
-# CO2 data from emissions driven simulations are output for (time,lev,lat,lon) which is too much
-# data for long  monthly simulations. This script loads files one at a time using the python
-# netcdf4 library and manually does global averaging with area and level thickness weghtings.
-# Output files are .npy files in 100 year chunks.
-# To run for each 100 year chunk:
-# for i in 0 1 2 3 4 5 6; do {
-#     nohup python get_co2.py ${i}
-# } &
-# done
+"""CO2 data from emissions driven simulations are output for (time,lev,lat,lon) which is too much
+ data for long  monthly simulations. This script loads files one at a time using the python
+ netcdf4 library and manually does global averaging with area and level thickness weghtings.
+ Output files are .npy files in 100 year chunks.
+ To run for each 100 year chunk:
+ for i in 0 1 2 3 4 5 6; do {
+     nohup python get_co2.py ${i}
+ } &
+ done
+"""
 
 import glob
 import sys
 
-import ipdb
 import matplotlib.pyplot as plt
 import netCDF4 as nc
 import numpy as np
@@ -35,7 +35,7 @@ MIL = 1000000
 NYEARS = 12*100
 #exp = 'PI-GWL-B2060'
 #exp_dir = f'/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5/{exp}/history/atm/netCDF'
-exp = 'esm-esm-piNoCrops'
+exp = 'GWL-DCBL-B2030'
 exp_dir = f'/g/data/p66/tfl561/ACCESS-ESM/{exp}/history/atm/netCDF'
 files = sorted(glob.glob(f'{exp_dir}/{exp}.pa-*_mon.nc'))[:800*12]
 files = files[0+sect*NYEARS:NYEARS+sect*NYEARS]

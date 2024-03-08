@@ -1,4 +1,6 @@
 #!/bin/env python3
+"""The .npy files should be created with get_co2 and join_co2
+"""
 import glob
 
 import ipdb
@@ -31,8 +33,14 @@ MOLMASS_CO2 = 0.0440095 # kg/mol
 KGKG_TO_MOLMOL = MOLMASS_AIR/MOLMASS_CO2 # Converion of kg/kg to mol/mol
 MIL = 1000000
 EXPERIMENTS = [
-        'esm-esm-piNoCrops',
+        #'esm-esm-piNoCrops',
         'PI-GWL-t6',
+        'GWL-10pct-B2030',
+        'GWL-25pct-B2030',
+        #'GWL-50pct-B2030',
+        #'GWL-EGNL-B2030',
+        'GWL-EGBL-B2030',
+        'GWL-DCBL-B2030',
         'PI-GWL-B2035',
         'PI-GWL-B2040',
         'PI-GWL-B2045',
@@ -57,6 +65,12 @@ COLORS = {
         'PI-GWL-B2050':'#055992',
         'PI-GWL-B2055':'#1140AB',
         'PI-GWL-B2060':'#1E31B6',
+        'GWL-10pct-B2030':'green',
+        'GWL-25pct-B2030':'blue',
+        'GWL-50pct-B2030':'yellow',
+        'GWL-EGBL-B2030':'pink',
+        'GWL-EGNL-B2030':'red',
+        'GWL-DCBL-B2030':'purple',
         'GWL-NoCrops-B2030':'#62EA00',
         'GWL-NoCrops-B2035':'#24CC00',
         'GWL-NoCrops-B2040':'#079F2A',
@@ -75,13 +89,19 @@ YEARS = {
         'PI-GWL-B2050':np.arange(0*12, 700*12)/12,
         'PI-GWL-B2055':np.arange(0*12, 700*12)/12,
         'PI-GWL-B2060':np.arange(0*12, 700*12)/12,
-        'GWL-NoCrops-B2030':np.arange(400*12, 600*12)/12,
-        'GWL-NoCrops-B2035':np.arange(400*12, 502*12)/12,
-        'GWL-NoCrops-B2040':np.arange(400*12, 502*12)/12,
-        'GWL-NoCrops-B2045':np.arange(400*12, 502*12)/12,
-        'GWL-NoCrops-B2050':np.arange(400*12, 502*12)/12,
-        'GWL-NoCrops-B2055':np.arange(400*12, 502*12)/12,
-        'GWL-NoCrops-B2060':np.arange(400*12, 502*12)/12,
+        'GWL-10pct-B2030':np.arange(400*12, 601*12)/12,
+        'GWL-25pct-B2030':np.arange(400*12, 601*12)/12,
+        'GWL-50pct-B2030':np.arange(400*12, 601*12)/12,
+        'GWL-EGNL-B2030':np.arange(400*12, 601*12)/12,
+        'GWL-EGBL-B2030':np.arange(400*12, 601*12)/12,
+        'GWL-DCBL-B2030':np.arange(400*12, 601*12)/12,
+        'GWL-NoCrops-B2030':np.arange(400*12, 601*12)/12,
+        'GWL-NoCrops-B2035':np.arange(400*12, 601*12)/12,
+        'GWL-NoCrops-B2040':np.arange(400*12, 601*12)/12,
+        'GWL-NoCrops-B2045':np.arange(400*12, 601*12)/12,
+        'GWL-NoCrops-B2050':np.arange(400*12, 601*12)/12,
+        'GWL-NoCrops-B2055':np.arange(400*12, 601*12)/12,
+        'GWL-NoCrops-B2060':np.arange(400*12, 601*12)/12,
         'GWL-EqFor-B2060':np.arange(400*12, 502*12)/12,
         }
 
@@ -119,7 +139,7 @@ for exper in EXPERIMENTS:
             color=COLORS[exper],
             linewidth=lwidth,
             )
-    if 'NoCrops' in exper or 'EqFor' in exper:
+    if 'GWL' in exper[:4] in exper:
         handles.append(handle[0])
         labels.append(exper)
 
@@ -127,8 +147,8 @@ plt.legend(handles, labels, fontsize='small', frameon=False)
 plt.xlabel('Time (years)')
 plt.ylabel('CO$_2$ (ppm)')
 plt.xlim(left=0, right=700)
-plt.show()
-#plt.savefig('plots/co2_surface_global_warming_level_no_crops.svg', dpi=200)
+#plt.show()
+plt.savefig('plots/co2_surface_global_warming_level_no_crops.svg', dpi=200)
 
 
 def pretty_print(data):

@@ -27,14 +27,14 @@ VARIABLES = {
         'cPassive':'fld_s03i860',
         }
 EXPERIMENTS = {
-        'PI-GWL-t6':'GWL-NoCrops-B2030',
+        #'PI-GWL-t6':'GWL-NoCrops-B2030',
         'PI-GWL-B2035':'GWL-NoCrops-B2035',
         'PI-GWL-B2040':'GWL-NoCrops-B2040',
         'PI-GWL-B2045':'GWL-NoCrops-B2045',
         'PI-GWL-B2050':'GWL-NoCrops-B2050',
         'PI-GWL-B2055':'GWL-NoCrops-B2055',
         'PI-GWL-B2060':'GWL-NoCrops-B2060',
-        'PI-GWL-B2060_duplicate':'GWL-EqFor-B2060',
+        #'PI-GWL-B2060_duplicate':'GWL-EqFor-B2060',
         }
 ARCHIVE_DIR = '/g/data/p66/tfl561/archive_data'
 RAW_CMIP_DIR = '/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5'
@@ -116,10 +116,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
 
 
         # Load the data.
-        if 'B2030' in exp or 't6' in exp:
-            period = '0500-0700'
-        else:
-            period = '0500-0601'
+        period = '0500-0700'
         if load_from_npy:
             for var in VARIABLES.keys():
                 data[exp][var] = np.load(f'data/{var}_{exp}_global_sum.npy') # [g(C)]
@@ -157,7 +154,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     plt.plot(years, cLand_diff.squeeze()/G_IN_PG, color=COLORS[nocrop_exp], label=exp) # [Pg(C)]
     plt.xlabel('Time (years)')
     plt.ylabel('$\Delta$ cLand (Pg)')
-    plt.xlim(left=400)
+    plt.xlim(left=600)
     plt.ylim(bottom=0, top=200)
     plt.legend(frameon=False)
 
