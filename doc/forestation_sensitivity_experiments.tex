@@ -134,14 +134,14 @@ In Australia there is 0.58 M km$^2$ expansion of forest area, or a 61\% increase
         \centering
         \includegraphics[width=0.5\linewidth]{../plots/crop_to_forest1.png}
     \end{subfigure}
-    \begin{subfigure}[b]{\linewidth}
-        \centering
-        \includegraphics[width=0.5\linewidth]{../plots/nearest_forest.png}
-    \end{subfigure}
-    \begin{subfigure}[b]{\linewidth}
-        \centering
-        \includegraphics[width=0.5\linewidth]{../plots/minimum.png}
-    \end{subfigure}
+%    \begin{subfigure}[b]{\linewidth}
+%        \centering
+%        \includegraphics[width=0.5\linewidth]{../plots/nearest_forest.png}
+%    \end{subfigure}
+%    \begin{subfigure}[b]{\linewidth}
+%        \centering
+%        \includegraphics[width=0.5\linewidth]{../plots/minimum.png}
+%    \end{subfigure}
     \caption{Replace crops}
     \label{fig:to_forest}
 \end{figure}
@@ -232,7 +232,7 @@ Hence, the effects of CO$_2$ fertilization are also evident for the Australian r
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
-        \includesvg[width=\linewidth]{../plots/co2_global_warming_level_no_crops.svg}
+        \includesvg[width=\linewidth]{../plots/co2_surface_global_warming_level_no_crops.svg}
     \end{subfigure}
     \caption{Global mean surface CO$_2$ concentrations for each experiment. Thin lines are the standard global warming level simulations. Bold lines are the forestation experiments.}
     \label{fig:global_co2}
@@ -290,6 +290,13 @@ Hence, the effects of CO$_2$ fertilization are also evident for the Australian r
 Fig. \ref{fig:global_temperature_timeseries} shows the global mean surface air temperature decrease from forestation under each global warming level.
 The greatest cooling occurs in the highest global warming level (2060) of -0.4 \textcelsius, and the least cooling occurs in the lowest global warming level (2030) by -0.2 \textcelsius{}.
 Global temperatures have approximately stabilized by 200 years of simulation.
+Locations that have forestation occurring generally have increases in temperature.
+This localised warming is likely related to an increased albedo from forest cover.
+\footnote{This probably exceeds the local cooling effect from increased surface roughness and evapotranspiration. CABLE seems to underestimate this effect somehow.}
+
+There exists some regional variability in the temperature as demonstrated in Fig. \ref{fig:tas_australia}, which shows the Australian 30-year mean temperature response from forestation for each global warming level.
+The 2040 instance show substantial cooling compared to the global warming levels of other branching points.
+On the other hand, the 2050 branching point shows relatively weak cooling compared tot he others.
 
 %\begin{figure}[H]
 %    \centering
@@ -323,22 +330,100 @@ Global temperatures have approximately stabilized by 200 years of simulation.
     \begin{subfigure}[b]{\linewidth}
         \includegraphics[width=\linewidth]{../plots/tas_GWL-NoCrops-B2060_last30.png}
     \end{subfigure}
-    \caption{Map of the change in surface air temperature from forestation averaged over the last 30
-    years of simulation, expressed as a difference between the forestation experiment and the standard global warming level simulation.}
+    \caption{Map of the change in surface air temperature from forestation averaged over the last 30 years of simulation, expressed as a difference between the forestation experiment and the standard global warming level simulation.}
     \label{fig:temperature_map}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.4\linewidth}
+        \includegraphics[width=\linewidth]{../plots/tas_GWL-NoCrops-B2030_australia_last30.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\linewidth}
+        \includegraphics[width=\linewidth]{../plots/tas_GWL-NoCrops-B2035_australia_last30.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\linewidth}
+        \includegraphics[width=\linewidth]{../plots/tas_GWL-NoCrops-B2040_australia_last30.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\linewidth}
+        \includegraphics[width=\linewidth]{../plots/tas_GWL-NoCrops-B2045_australia_last30.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\linewidth}
+        \includegraphics[width=\linewidth]{../plots/tas_GWL-NoCrops-B2055_australia_last30.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\linewidth}
+        \includegraphics[width=\linewidth]{../plots/tas_GWL-NoCrops-B2060_australia_last30.png}
+    \end{subfigure}
+    \caption{Temperature difference from forestation in Australia averaged over the last 30 years of the simulation for each global warming level branching at 2030–2060.}
+    \label{fig:tas_australia}
 \end{figure}
 
 \subsubsection{Precipitation}
 
-[Placeholder]
+The global mean response of precipitation rate (Fig. \ref{fig:global_pr_timeseries})
+genereally shows decreasing precipitation associated with global scale forestation.
+However, most of these decreases are non-local impacts occurring over the equatorial global oceans (Fig. \ref{fig:pr_map}).
+There are regions over the land that display increases in precipitation such as the amazon region of South America and Australasia.
+
+In Australia, precipitation generally increases in response to forestation and the associated global cooling.
+Most of the increases in precipitation occur in eastern Australia.
+A few grid cells in southwest western Australia consistently show a small increase in precipitation in response to forestation.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \includegraphics[width=\linewidth]{../plots/pr_GWL_gloabl_mean.png}
+    \end{subfigure}
+    \caption{Timeseries of the change in global mean precipitation rate from forestation, expressed as a difference between the forestation experiment and the standard global warming level simulation.}
+    \label{fig:global_pr_timeseries}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \includegraphics[width=\linewidth]{../plots/pr_GWL-NoCrops-B2060_last30.png}
+    \end{subfigure}
+    \caption{Map of the change in precipitation rate from forestation averaged over the last 30 years of simulation, expressed as a difference between the forestation experiment and the reference global warming level simulation.}
+    \label{fig:pr_map}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.4\linewidth}
+        \includegraphics[width=\linewidth]{../plots/pr_GWL-NoCrops-B2030_australia_last30.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\linewidth}
+        \includegraphics[width=\linewidth]{../plots/pr_GWL-NoCrops-B2035_australia_last30.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\linewidth}
+        \includegraphics[width=\linewidth]{../plots/pr_GWL-NoCrops-B2040_australia_last30.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\linewidth}
+        \includegraphics[width=\linewidth]{../plots/pr_GWL-NoCrops-B2045_australia_last30.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\linewidth}
+        \includegraphics[width=\linewidth]{../plots/pr_GWL-NoCrops-B2055_australia_last30.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\linewidth}
+        \includegraphics[width=\linewidth]{../plots/pr_GWL-NoCrops-B2060_australia_last30.png}
+    \end{subfigure}
+    \caption{Precipitation rate difference from forestation in Australia averaged over the last 30 years of the simulation for each global warming level branching at 2030–2060.}
+    \label{fig:pr_australia}
+\end{figure}
 
 \section{Discussion}
 
 Limitations of using ACCESS: no fire, no tree death or demography, no pft-climate dynamics, under estimation of evapotranspiration/hydrology leading to dominance of albedo, there are decrease in soil carbon with forestation and soil carbon uncertainties.
 
+Realism of forestation scenario.
+
 \section{Conclusion}
 
-[Placeholder]
+We perform experiments of 
+Forestation in ACCESS shows significant global cooling from increased carbon sink on the land surface.
+Warmer climates with higher CO2 fertilization effect have greater sequestration on the land surface.
+Some localized warming occurs with forestation in response to an increase in albedo. 
+Many land regions show increases in response to forestation, including Australia.
 
 \printbibliography
 
