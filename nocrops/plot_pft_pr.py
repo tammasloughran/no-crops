@@ -28,7 +28,7 @@ MAPFIG = 2
 TILE_FRAC_CODE = 'fld_s03i317'
 RAW_CMIP_DIR = '/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5'
 RAW_NOCROP_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
-EXAMPLE = '/g/data/p66/tfl561/archive_data/GWL-NoCrops-B2040/pr_GWL-NoCrops-B2040_0500-0601.nc'
+EXAMPLE = '/g/data/p66/tfl561/archive_data/GWL-NoCrops-B2040/pr_GWL-NoCrops-B2040_0500-0700.nc'
 LABELS = {
         'PI-GWL-t6':'Global warming level',
         'GWL-NoCrops-B2030':'Mixed forest',

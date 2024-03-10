@@ -49,7 +49,7 @@ def plot_australia(data:np.ndarray, title:str)->None:
     """Plot a map of Asutralia temperature anomalies.
     """
     ax = plt.axes(projection=ccrs.PlateCarree())
-    ax.set_extent([110, 160, -45, -10], crs=ccrs.PlateCarree())
+    ax.set_extent([110,160,-45,-10], crs=ccrs.PlateCarree())
     discrete_bins = mpl.colors.BoundaryNorm(
             boundaries=np.arange(-0.65, 0.65+0.1, 0.1),
             ncolors=256
@@ -96,7 +96,7 @@ def plot_map(data:np.ndarray, title:str)->None:
     plt.title(title)
 
 
-example_file = f'/g/data/p66/tfl561/archive_data/GWL-EGNL-B2030/cLand_GWL-EGNL-B2030_0500-0602.nc'
+example_file = f'/g/data/p66/tfl561/archive_data/GWL-EGNL-B2030/cLand_GWL-EGNL-B2030_0500-0700.nc'
 ncfile = nc.Dataset(example_file)
 lats = ncfile.variables['lat'][:]
 lons = ncfile.variables['lon'][:]

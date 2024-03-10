@@ -96,7 +96,7 @@ def plot_map(data:np.ndarray, title:str)->None:
     plt.title(title)
 
 
-example_file = f'/g/data/p66/tfl561/archive_data/GWL-EGNL-B2030/cLand_GWL-EGNL-B2030_0500-0602.nc'
+example_file = f'/g/data/p66/tfl561/archive_data/GWL-EGNL-B2030/cLand_GWL-EGNL-B2030_0500-0700.nc'
 ncfile = nc.Dataset(example_file)
 lats = ncfile.variables['lat'][:]
 lons = ncfile.variables['lon'][:]
