@@ -51,10 +51,9 @@ EXPERIMENTS = {
         'PI-GWL-B2055':'GWL-NoCrops-B2055',
         'PI-GWL-B2060':'GWL-NoCrops-B2060',
         'PI-GWL-B2060-duplicate':'GWL-NoCr-B2060-02',
-        'PI-GWL-B2060_duplicate':'GWL-EqFor-B2060',
+        #'PI-GWL-B2060_duplicate':'GWL-EqFor-B2060',
         }
 VARIABLES = {
-        #'tas':'fld_s03i236',
         'cLeaf':'fld_s03i852',
         'cWood':'fld_s03i853',
         'cRoot':'fld_s03i854',
@@ -115,14 +114,12 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
 
 
         # Load the data.
+        period = '0500-0700'
+        # The ensemble members restart file is for year 510.
         if exp=='GWL-NoCr-B2030-02':
-            period = '0510-0675'
+            period = '0510-0700'
         elif exp=='GWL-NoCr-B2060-02':
-            period = '0510-0602'
-        elif 'B2030' in exp or 't6' in exp:
-            period = '0500-0700'
-        else:
-            period = '0500-0601'
+            period = '0510-0700'
         if load_from_npy:
             for var in VARIABLES.keys():
                 data[exp][var] = np.load(f'data/{var}_{exp}_australia_sum.npy') # [g(C)]
@@ -142,10 +139,11 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
             data[exp]['cLand'] += data[exp][var]
 
     # Find the difference for cLand.
+    # 2nd ensemble members start at year 510
     if nocrop_exp=='GWL-NoCr-B2030-02':
-        cLand_diff = data[nocrop_exp]['cLand'] - data[gwl_exp]['cLand'][12*10:12*175]
+        cLand_diff = data[nocrop_exp]['cLand'] - data[gwl_exp]['cLand'][12*10:]
     elif nocrop_exp=='GWL-NoCr-B2060-02':
-        cLand_diff = data[nocrop_exp]['cLand'] - data[gwl_exp]['cLand'][12*10:12*102]
+        cLand_diff = data[nocrop_exp]['cLand'] - data[gwl_exp]['cLand'][12*10:]
     else:
         cLand_diff = data[nocrop_exp]['cLand'] - data[gwl_exp]['cLand']
 

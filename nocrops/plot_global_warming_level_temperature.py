@@ -16,7 +16,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 cdo = Cdo()
-cdo.debug = True
+cdo.debug = False
 
 VARIABLES = {
         'tas':'fld_s03i236',
@@ -29,7 +29,7 @@ EXPERIMENTS = {
         'PI-GWL-B2050':'GWL-NoCrops-B2050',
         'PI-GWL-B2055':'GWL-NoCrops-B2055',
         'PI-GWL-B2060':'GWL-NoCrops-B2060',
-        'PI-GWL-B2060_duplicate':'GWL-EqFor-B2060',
+        #'PI-GWL-B2060_duplicate':'GWL-EqFor-B2060',
         }
 ARCHIVE_DIR = '/g/data/p66/tfl561/archive_data'
 RAW_CMIP_DIR = '/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5'
@@ -80,7 +80,6 @@ def my_ks_test(samp1:np.ndarray, samp2:np.ndarray)->tuple:
             pvalue[j,i] = results.pvalue
     return statistic, pvalue
 
-
 load_from_npy = True
 
 # Load lats and lons.
@@ -117,26 +116,27 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
 
 
         # Load the data.
-        if 'B2030' in exp or 't6' in exp:
-            period = '0500-0700'
-        else:
-            period = '0500-0601'
+        period = '0500-0700'
+        #if 'B2030' in exp or 't6' in exp:
+        #    period = '0500-0700'
+        #else:
+        #    period = '0500-0601'
         if load_from_npy:
             for var in VARIABLES.keys():
-                data[exp][var] = np.load(f'data/{var}_{exp}_global_sum.npy') # [g(C)]
+                data[exp][var] = np.load(f'data/{var}_{exp}_global_mean.npy') # [g(C)]
                 data_tmean[exp][var] = np.load(f'data/{var}_{exp}_last20.npy')
         else:
             for var in VARIABLES.keys():
                 print(f"Loading {var}")
-                #data[exp][var] = load_global_sum(var,
-                #        input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
-                #        )
-                #np.save(f'data/{var}_{exp}_global_sum.npy', data[exp][var].data) # [g(C)]
-                #np.save(f'data/{var}_{exp}_last20.npy', data_tmean[exp][var].data) # [g(C)]
+                data[exp][var] = load_global_sum(var,
+                        input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
+                        )
+                np.save(f'data/{var}_{exp}_global_mean.npy', data[exp][var].data) # [g(C)]
                 data_tmean[exp][var] = load_last30(var,
                         input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
                         )
-                np.save(f'data/{var}_{exp}_firstyear.npy', data_tmean[exp][var].data) # [g(C)]
+                np.save(f'data/{var}_{exp}_last20.npy', data_tmean[exp][var].data) # [g(C)]
+                #np.save(f'data/{var}_{exp}_firstyear.npy', data_tmean[exp][var].data) # [g(C)]
 
     # Plot the difference time series of temperature.
     plt.figure(1)

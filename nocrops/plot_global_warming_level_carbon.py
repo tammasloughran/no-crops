@@ -15,7 +15,6 @@ cdo = Cdo()
 cdo.debug = False
 
 VARIABLES = {
-        #'tas':'fld_s03i236',
         'cLeaf':'fld_s03i852',
         'cWood':'fld_s03i853',
         'cRoot':'fld_s03i854',
@@ -27,7 +26,7 @@ VARIABLES = {
         'cPassive':'fld_s03i860',
         }
 EXPERIMENTS = {
-        #'PI-GWL-t6':'GWL-NoCrops-B2030',
+        'PI-GWL-t6':'GWL-NoCrops-B2030',
         'PI-GWL-B2035':'GWL-NoCrops-B2035',
         'PI-GWL-B2040':'GWL-NoCrops-B2040',
         'PI-GWL-B2045':'GWL-NoCrops-B2045',
@@ -124,13 +123,11 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
         else:
             for var in VARIABLES.keys():
                 print(f"Loading {var}")
-                data[exp][var] = load_global_sum(
-                        var,
+                data[exp][var] = load_global_sum(var,
                         input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
                         )
                 np.save(f'data/{var}_{exp}_global_sum.npy', data[exp][var].data) # [g(C)]
-                data_tmean[exp][var] = load_last20(
-                        var,
+                data_tmean[exp][var] = load_last20(var,
                         input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
                         )
                 np.save(f'data/{var}_{exp}_last20.npy', data_tmean[exp][var].data) # [g(C)]
@@ -154,8 +151,8 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     plt.plot(years, cLand_diff.squeeze()/G_IN_PG, color=COLORS[nocrop_exp], label=exp) # [Pg(C)]
     plt.xlabel('Time (years)')
     plt.ylabel('$\Delta$ cLand (Pg)')
-    plt.xlim(left=600)
-    plt.ylim(bottom=0, top=200)
+    plt.xlim(left=400)
+    plt.ylim(bottom=0, top=250)
     plt.legend(frameon=False)
 
     # Plot the map of the difference for the last 20 years
@@ -165,10 +162,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
             boundaries=np.arange(-0.65, 0.65+0.1, 0.1),
             ncolors=256,
             )
-    colors = ax.pcolormesh(
-            lons,
-            lats,
-            cLand_diff_tmean.squeeze()/G_IN_PG,
+    colors = ax.pcolormesh(lons, lats, cLand_diff_tmean.squeeze()/G_IN_PG,
             norm=discrete_bins,
             cmap='seismic',
             transform=ccrs.PlateCarree(),

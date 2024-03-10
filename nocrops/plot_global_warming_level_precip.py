@@ -7,6 +7,7 @@ import cartopy.crs as ccrs
 import cdo_decorators as cdod
 import ipdb
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import netCDF4 as nc
 import numpy as np
 from cdo import Cdo
@@ -14,7 +15,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 cdo = Cdo()
-cdo.debug = True
+cdo.debug = False
 
 VARIABLES = {
         #'tas':'fld_s03i236',
@@ -28,7 +29,7 @@ EXPERIMENTS = {
         'PI-GWL-B2050':'GWL-NoCrops-B2050',
         'PI-GWL-B2055':'GWL-NoCrops-B2055',
         'PI-GWL-B2060':'GWL-NoCrops-B2060',
-        'PI-GWL-B2060_duplicate':'GWL-EqFor-B2060',
+        #'PI-GWL-B2060_duplicate':'GWL-EqFor-B2060',
         }
 ARCHIVE_DIR = '/g/data/p66/tfl561/archive_data'
 RAW_CMIP_DIR = '/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5'
@@ -68,14 +69,21 @@ def yearly_mean_from_monthly(data:np.ndarray)->np.ndarray:
 def plot_last30(data_to_plot):
     fig2 = plt.figure()
     ax = fig2.add_subplot(1, 1, 1, projection=ccrs.Robinson())
+    discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-3.1, 3.2, 0.2), ncolors=256)
     colors = ax.pcolormesh(lons, lats, data_to_plot,
             cmap='seismic_r',
-            vmin=-rng,
-            vmax=rng,
+            #vmin=-rng,
+            #vmax=rng,
+            norm=discrete_bins,
             transform=ccrs.PlateCarree(),
             )
     ax.coastlines()
-    plt.colorbar(colors, label='$\Delta$ Precip. (mm/day)', orientation='horizontal', pad=0.05)
+    plt.colorbar(colors,
+            label='$\Delta$ Precip. (mm/day)',
+            ticks=[-3, -2.5, -2, -1.5, -1, -.5, .5, 1, 1.5, 2, 2.5, 3],
+            orientation='horizontal',
+            pad=0.05,
+            )
     plt.title(f'{nocrop_exp} - {gwl_exp}')
     plt.savefig(f'plots/pr_{nocrop_exp}_last30.png', dpi=DPI)
 
@@ -83,16 +91,23 @@ def plot_last30(data_to_plot):
 def plot_australia_last30(data_to_plot):
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
+    discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-3.1, 3.2, 0.2), ncolors=256)
     australia_lonlat = [110,155,-45,-10]
     ax.set_extent(australia_lonlat, crs=ccrs.PlateCarree())
     colors = ax.pcolormesh(lons, lats, data_to_plot,
             cmap='seismic_r',
-            vmin=-rng,
-            vmax=rng,
+            #vmin=-rng,
+            #vmax=rng,
+            norm=discrete_bins,
             transform=ccrs.PlateCarree(),
             )
     ax.coastlines()
-    plt.colorbar(colors, label='$\Delta$ Precip. (mm/day)', orientation='horizontal', pad=0.05)
+    plt.colorbar(colors,
+            label='$\Delta$ Precip. (mm/day)',
+            ticks=[-3, -2.5, -2, -1.5, -1, -.5, .5, 1, 1.5, 2, 2.5, 3],
+            orientation='horizontal',
+            pad=0.05,
+            )
     plt.title(f'{nocrop_exp} - {gwl_exp}')
     plt.savefig(f'plots/pr_{nocrop_exp}_australia_last30.png', dpi=DPI)
 
@@ -148,26 +163,27 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
 
 
         # Load the data.
-        if 'B2030' in exp or 't6' in exp:
-            period = '0500-0700'
-        else:
-            period = '0500-0601'
+        period = '0500-0700'
+        #if 'B2030' in exp or 't6' in exp:
+        #    period = '0500-0700'
+        #else:
+        #    period = '0500-0601'
         if load_from_npy:
             for var in VARIABLES.keys():
-                data[exp][var] = np.load(f'data/{var}_{exp}_global_sum.npy')
-                data_tmean[exp][var] = np.load(f'data/{var}_{exp}_last20.npy')
+                data[exp][var] = np.load(f'data/{var}_{exp}_global_mean.npy')
+                data_tmean[exp][var] = np.load(f'data/{var}_{exp}_last30.npy')
         else:
             for var in VARIABLES.keys():
                 print(f"Loading {var}")
                 data[exp][var] = load_global_sum(var,
                         input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
                         )
-                np.save(f'data/{var}_{exp}_global_sum.npy', data[exp][var].data)
+                np.save(f'data/{var}_{exp}_global_mean.npy', data[exp][var].data)
                 data_tmean[exp][var] = load_last30(var,
                         input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
                         )
-                np.save(f'data/{var}_{exp}_last20.npy', data_tmean[exp][var].data)
-                np.save(f'data/{var}_{exp}_firstyear.npy', data_tmean[exp][var].data)
+                np.save(f'data/{var}_{exp}_last30.npy', data_tmean[exp][var].data)
+                #np.save(f'data/{var}_{exp}_firstyear.npy', data_tmean[exp][var].data)
 
     # Plot the difference time series of temperature.
     if len(data[nocrop_exp]['pr'])==1223:
@@ -179,7 +195,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     years = yearly_mean_from_monthly(years)
     apply_time_series_to_plot(years, line)
 
-    # Plot the map of the difference for the last 20 years
+    # Plot the map of the difference for the last 30 years
     rng = 3.0
     data_to_plot = data_tmean[nocrop_exp]['pr'].squeeze() - data_tmean[gwl_exp]['pr'].squeeze()
     plot_last30(data_to_plot)
