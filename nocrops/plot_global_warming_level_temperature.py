@@ -52,6 +52,12 @@ COLORS = {
         }
 
 
+def moving_average(x:np.ndarray, window:int)->np.ndarray:
+    """Calculate a moving average using a window of size `window`.
+    """
+    return np.convolve(x, np.ones(window), mode='same')/window
+
+
 def yearly_mean_from_monthly(data:np.ndarray)->np.ndarray:
     """Calculate a yearly mean on a numpy array of monthly data.
     The 0th dimension must be time and divisible by 12.
@@ -79,6 +85,48 @@ def my_ks_test(samp1:np.ndarray, samp2:np.ndarray)->tuple:
             statistic[j,i] = results.statistic
             pvalue[j,i] = results.pvalue
     return statistic, pvalue
+
+
+def plot_globe(data:np.ndarray, title:str, save:str)->None:
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Robinson())
+    discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-2.1, 2.2, 0.2), ncolors=256)
+    colors = ax.pcolormesh(lons, lats, data,
+            cmap='seismic',
+            norm=discrete_bins,
+            transform=ccrs.PlateCarree(),
+            )
+    ax.coastlines()
+    plt.colorbar(colors,
+            label='$\Delta$ temperature ($^{\circ}$C)',
+            ticks=[-2,-1.5,-1,-.5,0,.5,1,1.5,2],
+            orientation='horizontal',
+            pad=0.05,
+            )
+    plt.title(title)
+    plt.savefig(f'plots/{save}', dpi=DPI)
+
+def plot_australia(data:np.ndarray, title:str, save:str)->None:
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
+    australia_lonlat = [110,155,-45,-10]
+    ax.set_extent(australia_lonlat, crs=ccrs.PlateCarree())
+    discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-2.1, 2.2, 0.2), ncolors=256)
+    colors = ax.pcolormesh(lons, lats, data,
+            cmap='seismic',
+            norm=discrete_bins,
+            transform=ccrs.PlateCarree(),
+            )
+    ax.coastlines()
+    plt.colorbar(colors,
+            label='$\Delta$ Surface air temperature ($^{\circ}$C)',
+            orientation='horizontal',
+            ticks=[-2,-1.5,-1,-.5,0,.5,1,1.5,2],
+            pad=0.05,
+            )
+    plt.title(title)
+    plt.savefig(f'plots/{save}', dpi=DPI)
+
 
 load_from_npy = True
 
@@ -117,13 +165,9 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
 
         # Load the data.
         period = '0500-0700'
-        #if 'B2030' in exp or 't6' in exp:
-        #    period = '0500-0700'
-        #else:
-        #    period = '0500-0601'
         if load_from_npy:
             for var in VARIABLES.keys():
-                data[exp][var] = np.load(f'data/{var}_{exp}_global_mean.npy') # [g(C)]
+                data[exp][var] = np.load(f'data/{var}_{exp}_global_mean.npy')
                 data_tmean[exp][var] = np.load(f'data/{var}_{exp}_last20.npy')
         else:
             for var in VARIABLES.keys():
@@ -131,12 +175,11 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
                 data[exp][var] = load_global_sum(var,
                         input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
                         )
-                np.save(f'data/{var}_{exp}_global_mean.npy', data[exp][var].data) # [g(C)]
+                np.save(f'data/{var}_{exp}_global_mean.npy', data[exp][var].data)
                 data_tmean[exp][var] = load_last30(var,
                         input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
                         )
-                np.save(f'data/{var}_{exp}_last20.npy', data_tmean[exp][var].data) # [g(C)]
-                #np.save(f'data/{var}_{exp}_firstyear.npy', data_tmean[exp][var].data) # [g(C)]
+                np.save(f'data/{var}_{exp}_last20.npy', data_tmean[exp][var].data)
 
     # Plot the difference time series of temperature.
     plt.figure(1)
@@ -146,8 +189,14 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     nmonths = data[exp]['tas'].squeeze().shape[0]
     years = np.linspace(400, 400+nmonths*(1/12), nmonths)
     line = yearly_mean_from_monthly(line)
+    smooth = moving_average(line, window=10)
     years = yearly_mean_from_monthly(years)
+    smooth_years = years[5:-5]
     plt.plot(years, line,
+            color=COLORS[nocrop_exp],
+            alpha=0.3,
+            )
+    plt.plot(years, smooth,
             color=COLORS[nocrop_exp],
             label=exp,
             )
@@ -158,51 +207,20 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
 
     # Plot the map of the difference for the last 30 years
     difference = data_tmean[nocrop_exp]['tas'].squeeze() - data_tmean[gwl_exp]['tas'].squeeze()
-    fig2 = plt.figure()
-    ax = fig2.add_subplot(1, 1, 1, projection=ccrs.Robinson())
-    discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-2.1, 2.2, 0.2), ncolors=256)
-    colors = ax.pcolormesh(lons, lats, difference,
-            cmap='seismic',
-            #vmin=-4,
-            #vmax=4,
-            norm=discrete_bins,
-            transform=ccrs.PlateCarree(),
-            )
-    ax.coastlines()
-    plt.colorbar(colors,
-            label='$\Delta$ temperature ($^{\circ}$C)',
-            ticks=[-2, -1.5, -1, -.5, .5, 1, 1.5, 2],
-            orientation='horizontal',
-            pad=0.05,
-            )
-    plt.title(f'{nocrop_exp} - {gwl_exp}')
-    plt.savefig(f'plots/tas_{nocrop_exp}_last30.png', dpi=DPI)
-
+    plot_globe(difference, f'{nocrop_exp} - {gwl_exp}', f'tas_{nocrop_exp}_last30.png')
     # Plot the map of the difference for the last 30 years in Australia.
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
-    australia_lonlat = [110,155,-45,-10]
-    ax.set_extent(australia_lonlat, crs=ccrs.PlateCarree())
-    data_to_plot = data_tmean[nocrop_exp]['tas'].squeeze() - data_tmean[gwl_exp]['tas'].squeeze()
-    discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-2.1, 2.2, 0.2), ncolors=256)
-    colors = ax.pcolormesh(lons, lats, data_to_plot,
-            cmap='seismic',
-            #vmin=-4,
-            #vmax=4,
-            norm=discrete_bins,
-            transform=ccrs.PlateCarree(),
+    plot_australia(
+            difference,
+            f'{nocrop_exp} - {gwl_exp}',
+            f'tas_{nocrop_exp}_australia_last30.png',
             )
-    ax.coastlines()
-    plt.colorbar(colors,
-            label='$\Delta$ Surface air temperature ($^{\circ}$C)',
-            orientation='horizontal',
-            ticks=[-2, -1.5, -1, -.5, .5, 1, 1.5, 2],
-            pad=0.05,
-            )
-    plt.title(f'{nocrop_exp} - {gwl_exp}')
-    plt.savefig(f'plots/tas_{nocrop_exp}_australia_last30.png', dpi=DPI)
 
-# Significance testing of all experiments.
+# Save the line plot
+plt.figure(1)
+plt.savefig(f'plots/tas_GWL_gloabl_mean.png', dpi=DPI)
+
+# Significance testing of all experiments. I have tried standard ttest, kolmogorov-smirnov test
+# and Wilcoxon test. I think Wilcoxon test is the most appropriate one for paired data.
 shape = data_tmean[nocrop_exp]['tas'].squeeze().shape
 data_to_plot = np.ones((len(EXPERIMENTS.keys()),)+shape)*np.nan
 dataa = np.ones((len(EXPERIMENTS.keys()),)+shape)*np.nan
@@ -214,49 +232,20 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     dataa[i] = data_tmean[nocrop_exp]['tas'].squeeze()
     datab[i] = data_tmean[gwl_exp]['tas'].squeeze()
     i += 1
-#statistic, pvalue = stats.ttest_ind(dataa, datab, axis=0, equal_var=False)
-#statistic, pvalue = my_ks_test(dataa, datab)
 statistic, pvalue = stats.wilcoxon(dataa, datab, method='exact', axis=0)
 data_to_plot = data_to_plot.mean(axis=0)
-data_to_plot[pvalue>0.01] = np.nan
-fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
-colors = ax.pcolormesh(lons, lats, data_to_plot.squeeze(),
-        cmap='seismic',
-        vmin=-4,
-        vmax=4,
-        transform=ccrs.PlateCarree(),
-        )
-ax.coastlines()
-plt.colorbar(colors,
-        label='$\Delta$ Surface air temperature ($^{\circ}$C)',
-        orientation='horizontal',
-        pad=0.05,
-        )
-plt.savefig(f'plots/tas_{nocrop_exp}_last30_sig.png', dpi=DPI)
+# Mask out regions the exceed the 5% significance threshold.
+data_to_plot[pvalue>0.05] = np.nan
 
-fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
-australia_lonlat = [110,155,-45,-10]
-ax.set_extent(australia_lonlat, crs=ccrs.PlateCarree())
-colors = ax.pcolormesh(lons, lats, data_to_plot.squeeze(),
-        cmap='seismic',
-        vmin=-4,
-        vmax=4,
-        transform=ccrs.PlateCarree(),
-        )
-ax.coastlines()
-plt.colorbar(colors,
-        label='$\Delta$ Surface air temperature ($^{\circ}$C)',
-        orientation='horizontal',
-        pad=0.05,
-        )
-plt.title(f'{nocrop_exp} - {gwl_exp}')
-plt.savefig(f'plots/tas_{nocrop_exp}_australia_last30_sig.png', dpi=DPI)
+# Plotting
+plot_globe(data_to_plot, 'Mean of all experiments', 'tas_all_experiments_last30_sig.png')
 
+plot_australia(
+        data_to_plot,
+        'Mean of all experiments',
+        'tas_all_experiments_australia_last30_sig.png',
+        )
 
-# Save figures.
-plt.figure(1)
-plt.savefig(f'plots/tas_GWL_gloabl_mean.png', dpi=DPI)
+# Show figures.
 plt.show()
 
