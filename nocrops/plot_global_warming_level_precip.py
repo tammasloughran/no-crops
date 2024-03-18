@@ -3,6 +3,7 @@
 import glob
 import os
 
+import scipy.stats as stats
 import cartopy.crs as ccrs
 import cdo_decorators as cdod
 import ipdb
@@ -52,6 +53,12 @@ COLORS = {
         }
 
 
+def moving_average(x:np.ndarray, window:int)->np.ndarray:
+    """Calculate a moving average using a window of size `window`.
+    """
+    return np.convolve(x, np.ones(window), mode='same')/window
+
+
 def yearly_mean_from_monthly(data:np.ndarray)->np.ndarray:
     """Calculate a yearly mean on a numpy array of monthly data.
     The 0th dimension must be time and divisible by 12.
@@ -66,29 +73,27 @@ def yearly_mean_from_monthly(data:np.ndarray)->np.ndarray:
     return np.average(data.reshape(toshape), axis=1, weights=fraction_of_year)
 
 
-def plot_last30(data_to_plot):
+def plot_last30(data_to_plot, title, save):
     fig2 = plt.figure()
     ax = fig2.add_subplot(1, 1, 1, projection=ccrs.Robinson())
     discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-3.1, 3.2, 0.2), ncolors=256)
     colors = ax.pcolormesh(lons, lats, data_to_plot,
             cmap='seismic_r',
-            #vmin=-rng,
-            #vmax=rng,
             norm=discrete_bins,
             transform=ccrs.PlateCarree(),
             )
     ax.coastlines()
     plt.colorbar(colors,
             label='$\Delta$ Precip. (mm/day)',
-            ticks=[-3, -2.5, -2, -1.5, -1, -.5, .5, 1, 1.5, 2, 2.5, 3],
+            ticks=[-3,-2.5,-2,-1.5,-1,-.5,0,.5,1,1.5,2,2.5,3],
             orientation='horizontal',
             pad=0.05,
             )
-    plt.title(f'{nocrop_exp} - {gwl_exp}')
-    plt.savefig(f'plots/pr_{nocrop_exp}_last30.png', dpi=DPI)
+    plt.title(title)
+    plt.savefig(f'plots/{save}', dpi=DPI)
 
 
-def plot_australia_last30(data_to_plot):
+def plot_australia_last30(data_to_plot, title, save):
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
     discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-3.1, 3.2, 0.2), ncolors=256)
@@ -96,32 +101,35 @@ def plot_australia_last30(data_to_plot):
     ax.set_extent(australia_lonlat, crs=ccrs.PlateCarree())
     colors = ax.pcolormesh(lons, lats, data_to_plot,
             cmap='seismic_r',
-            #vmin=-rng,
-            #vmax=rng,
             norm=discrete_bins,
             transform=ccrs.PlateCarree(),
             )
     ax.coastlines()
     plt.colorbar(colors,
             label='$\Delta$ Precip. (mm/day)',
-            ticks=[-3, -2.5, -2, -1.5, -1, -.5, .5, 1, 1.5, 2, 2.5, 3],
+            ticks=[-3,-2.5,-2,-1.5,-1,-.5,0,.5,1,1.5,2,2.5,3],
             orientation='horizontal',
             pad=0.05,
             )
-    plt.title(f'{nocrop_exp} - {gwl_exp}')
-    plt.savefig(f'plots/pr_{nocrop_exp}_australia_last30.png', dpi=DPI)
+    plt.title(title)
+    plt.savefig(f'plots/{save}', dpi=DPI)
 
 
 def apply_time_series_to_plot(years, line):
+    smooth = moving_average(line, window=10)
     plt.figure(1)
     plt.plot(years, line,
             color=COLORS[nocrop_exp],
+            alpha=0.3,
+            )
+    plt.plot(years, smooth,
+            color=COLORS[nocrop_exp],
             label=exp,
             )
+    plt.hlines(y=0, xmin=years[0], xmax=years[-1], color='black')
     plt.xlabel('Time (years)')
     plt.ylabel('$\Delta$ Precip. (mm/day)')
     plt.xlim(left=400)
-    #plt.ylim(bottom=0)
     plt.legend(frameon=False)
 
 
@@ -164,10 +172,6 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
 
         # Load the data.
         period = '0500-0700'
-        #if 'B2030' in exp or 't6' in exp:
-        #    period = '0500-0700'
-        #else:
-        #    period = '0500-0601'
         if load_from_npy:
             for var in VARIABLES.keys():
                 data[exp][var] = np.load(f'data/{var}_{exp}_global_mean.npy')
@@ -183,7 +187,6 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
                         input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
                         )
                 np.save(f'data/{var}_{exp}_last30.npy', data_tmean[exp][var].data)
-                #np.save(f'data/{var}_{exp}_firstyear.npy', data_tmean[exp][var].data)
 
     # Plot the difference time series of temperature.
     if len(data[nocrop_exp]['pr'])==1223:
@@ -196,12 +199,42 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     apply_time_series_to_plot(years, line)
 
     # Plot the map of the difference for the last 30 years
-    rng = 3.0
     data_to_plot = data_tmean[nocrop_exp]['pr'].squeeze() - data_tmean[gwl_exp]['pr'].squeeze()
-    plot_last30(data_to_plot)
+    plot_last30(data_to_plot, f'{nocrop_exp} - {gwl_exp}', f'pr_{nocrop_exp}_last30.png')
 
     # Plot the map of the difference for the last 30 years in Australia.
-    plot_australia_last30(data_to_plot)
+    plot_australia_last30(
+            data_to_plot,
+            f'{nocrop_exp} - {gwl_exp}',
+            f'pr_{nocrop_exp}_australia_last30.png',
+            )
+
+# Significance testing of all experiments. I have tried standard ttest, kolmogorov-smirnov test
+# and Wilcoxon test. I think Wilcoxon test is the most appropriate one for paired data.
+shape = data_tmean[nocrop_exp]['pr'].squeeze().shape
+data_to_plot = np.ones((len(EXPERIMENTS.keys()),)+shape)*np.nan
+dataa = np.ones((len(EXPERIMENTS.keys()),)+shape)*np.nan
+datab = np.ones((len(EXPERIMENTS.keys()),)+shape)*np.nan
+i = 0
+for gwl_exp,nocrop_exp in EXPERIMENTS.items():
+    if 'duplicate' in gwl_exp: gwl_exp = 'PI-GWL-B2060'
+    data_to_plot[i] = data_tmean[nocrop_exp]['pr'].squeeze() - data_tmean[gwl_exp]['pr'].squeeze()
+    dataa[i] = data_tmean[nocrop_exp]['pr'].squeeze()
+    datab[i] = data_tmean[gwl_exp]['pr'].squeeze()
+    i += 1
+statistic, pvalue = stats.wilcoxon(dataa, datab, method='exact', axis=0)
+data_to_plot = data_to_plot.mean(axis=0)
+# Mask out regions the exceed the 5% significance threshold.
+data_to_plot[pvalue>0.05] = np.nan
+
+# Plotting
+plot_last30(data_to_plot, 'Mean of all experiments', 'pr_all_experiments_last30_sig.png')
+
+plot_australia_last30(
+        data_to_plot,
+        'Mean of all experiments',
+        'pr_all_experiments_australia_last30_sig.png',
+        )
 
 # Save figures.
 plt.figure(1)
