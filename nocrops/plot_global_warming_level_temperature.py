@@ -200,6 +200,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
             color=COLORS[nocrop_exp],
             label=exp,
             )
+    plt.hlines(y=0, xmin=years[0], xmax=years[-1], color='black')
     plt.xlabel('Time (years)')
     plt.ylabel('$\Delta$ Temperature ($^{\circ}$C)')
     plt.xlim(left=400)

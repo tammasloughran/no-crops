@@ -23,11 +23,11 @@ cdo.debug = True
 ARCHIVE = '/g/data/p66/tfl561/archive_data'
 
 TAS_REF_FILENAME = f'/g/data/p66/tfl561/archive_data/PI-GWL-t6/tas_PI-GWL-t6_0500-0700.nc'
-TAS_BGC_FILENAME = f'{ARCHIVE}/GWL-CO2only-B2030/tas_GWL-CO2only-B2030_0500-0600.nc'
+TAS_BGC_FILENAME = f'{ARCHIVE}/GWL-CO2only-B2030/tas_GWL-CO2only-B2030_0500-0700.nc'
 TAS_TOTAL_FILENAME = f'{ARCHIVE}/GWL-NoCrops-B2030/tas_GWL-NoCrops-B2030_0500-0700.nc'
 
 
-@cdod.cdo_selyear('540/559') # Load only the last 30 years.
+@cdod.cdo_selyear('550/579') # Load only the last 30 years.
 @cdod.cdo_timmean
 def load_last_30(input:str, var:str)->np.ndarray:
     """Load a map of the last 30 years of the simulation into a numpy array.
@@ -90,11 +90,12 @@ tas_tseries_bgp = sub_trim(tas_tseries_total, tas_tseries_bgc)
 
 # Plot the time series of temperature
 plt.figure()
-plt.plot(yearly_mean_from_monthly(tas_tseries_total[:1200]), color='black', label='Total')
+plt.plot(yearly_mean_from_monthly(tas_tseries_total), color='black', label='Total')
 plt.plot(yearly_mean_from_monthly(tas_tseries_bgc), color='blue', label='Biogeochemical')
 plt.plot(yearly_mean_from_monthly(tas_tseries_bgp), color='red', label='Biogeophysical')
 plt.xlabel('Time (years)')
 plt.ylabel('TAS ($^{\circ}$C)')
+plt.hlines(y=0, xmin=0, xmax=200)
 plt.legend()
 #plt.show()
 
@@ -110,8 +111,6 @@ def plot_map(data:np.ndarray, title:str)->None:
     shading = ax.pcolormesh(lons, lats, data,
             cmap='bwr',
             norm=discrete_bins,
-            #vmin=-2.0,
-            #vmax=2.0,
             transform=ccrs.PlateCarree(),
             )
     plt.title(title)
@@ -138,8 +137,6 @@ def plot_australia(data:np.ndarray, title:str)->None:
     shading = ax.pcolormesh(lons, lats, data,
             cmap='bwr',
             norm=discrete_bins,
-            #vmin=-2.0,
-            #vmax=2.0,
             transform=ccrs.PlateCarree(),
             )
     plt.title(title)
