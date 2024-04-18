@@ -18,7 +18,7 @@
 \setlength{\parindent}{1cm}
 \linenumbers
 
-\title{Sensitivity experiments of Australian forestation in ACCESS-ESM1.5 under several global warming levels}
+\title{Forestation in ACCESS-ESM1.5 under stabilized global warming levels}
 \author{Tammas Loughran et al.}
 
 \begin{document}
@@ -39,7 +39,8 @@
 \section{Introduction}
 
 Meeting the net-zero commitments of the Paris Agreement will require not only fossil fuel mitigation but also active carbon dioxide removal (CDR) strategies since some sources of greenhouse gasses are difficult to abate immediately (citations).
-Australia's long-term emissions reduction strategy relies on a large portion of its emissions reduction coming from land-based solutions to generate negative emissions, such as by forests and soil carbon (citations).
+% Say something about current clobag emissions reduction strategies and that forestation is one of
+% the most affordable and simplest ways to do it.
 Emerging technologies also may leverage biomass as a fuel source, which when combined with carbon capture and storage allows for permanent removal of CO$_2$ (citations).
 The preservation for natural forests and development of managed forests is therefore a key resource to achieve net-zero by 2050, and its land-use requirements compete with agricultural requirements, particularly in an expanding population and economy (citations).
 The land-use changes required would potentially involve some abandonment of marginal traditional agricultural lands to make way for forests, either for commercial harvesting or as new protected natural lands.
@@ -49,12 +50,14 @@ The growth of new forests can affect the climate in various ways: by carbon assi
 
 % Findings of existing studies eg loughran et al.
 
-The CO$_2$ removal potential and climate mitigation of forestation is still poorly understood for Australia.
-Integrated assessment models in the past have provided plausible scenarios of global forestation for CMIP6, but these scenarios do not have any additional forest area expansion in Australia \parencite{loughran_limited_2023} and are therefore unsuitable for investigating the CDR potential of Australian forests and the biogeophysical impacts.
+The CO$_2$ removal potential and climate mitigation of forestation is still poorly understood.
+Integrated assessment models in the past have provided plausible scenarios of global forestation for
+CMIP6 but this scenario includes both deforestation and avoided deforestation, which makes it
+difficult to distinguish the effects of new forestats on the climate.
+
 Furthermore, we do not have projections under stable climates at different global warming levels that are consistent with the Paris agreement targets.
-% This is probably better as a separate paper.
 %In fact, how ACCESS responds to forestation in general is still poorly understood and fundamental land-use change experiments are needed to establish the suitability of the model for assessing the CDR potential of Australia's terrestrial biosphere.
-Therefore, we aim to create a range of projections of the CDR potential of forestation for both Australia and the globe under a variety of possible stabilized future climate states.
+Therefore, we aim to create a range of projections of the CDR potential of forestation under a variety of possible stabilized future climate states.
 
 We run ACCESS-ESM1-5 under pre-industrial and present day and future climate to estimate the productivity and climate effects of forests under different mitigation scenarios.
 We also create forestation scenarios with specific biome types to differentiate the climate effects from planting large forests of specific plant functional types.
@@ -75,7 +78,7 @@ The global distribution of vegetation, crops and land surface types is determine
 \begin{figure}[H]
     \begin{subfigure}[b]{\linewidth}
         \centering
-        \includegraphics[width=\linewidth]{../plots/cable_dominant_tiles.png}
+        \includegraphics[width=\linewidth]{../../plots/cable_dominant_tiles.png}
     \end{subfigure}
     \caption{CABLE dominant PFTs}
     \label{fig:dominant_pfts}
@@ -90,7 +93,6 @@ In CABLE, there are four vegetation types that represent forests: evergreen broa
 Deciduous needle leaf forests were excluded from forestation because they are limited to high latitudes of the Asian continent (Fig. \ref{fig:dominant_pfts}), and very few grid cells have both deciduous needle leaf forests and nearby croplands on which to expand.
 The resulting forest expansion for complete replacement of crops with forests is shown in Fig. (\ref{fig:forestation_on_crops}).
 A large amount of forestation occurs in India, where a large portion of existing croplands currently exists.
-Of particular note is Australia, which features forest expansion in two distinct regions: the southeast and the southwest.
 
 The procedure for replacing crops with trees is summarized in Fig. \ref{fig:to_forest}.
 For each grid-cell, crops are removed by reducing the tile fraction for croplands.
@@ -126,22 +128,12 @@ Fig. \ref{fig:forestation_ammount} shows the global area extent of existing fore
 In general, existing forest area (dark green) decreases over the course of the \textit{ssp-585} scenario and croplands increases.
 The amount of forestation occurring in the GWL experiments is ~19 M km$^2$, this is an expansion of ~39\% of global forest area.
 The 10\% deployment scenario forest expansion is comparable to that of the LUMIP forestation scenario in \cite{loughran_limited_2023}.
-% maybe also show the forestation extent for Australia if I'm also going to have a section just for Australia.
-In Australia there is 0.58 M km$^2$ expansion of forest area, or a 61\% increase in Australia's forest area.
 
 \begin{figure}[H]
     \begin{subfigure}[b]{\linewidth}
         \centering
-        \includegraphics[width=0.5\linewidth]{../plots/crop_to_forest1.png}
+        \includegraphics[width=0.5\linewidth]{../../plots/crop_to_forest1.png}
     \end{subfigure}
-%    \begin{subfigure}[b]{\linewidth}
-%        \centering
-%        \includegraphics[width=0.5\linewidth]{../plots/nearest_forest.png}
-%    \end{subfigure}
-%    \begin{subfigure}[b]{\linewidth}
-%        \centering
-%        \includegraphics[width=0.5\linewidth]{../plots/minimum.png}
-%    \end{subfigure}
     \caption{Replace crops}
     \label{fig:to_forest}
 \end{figure}
@@ -161,23 +153,20 @@ GWL-50pc-B2030       & PI-GWL-t6     & 50\% of 2030 croplands       & PI-GWL-t6 
 GWL-25pc-B2030       & PI-GWL-t6     & 25\% of 2030 croplands       & PI-GWL-t6         \\
 GWL-10pc-B2030       & PI-GWL-t6     & 10\% of 2030 croplands       & PI-GWL-t6         \\
 GWL-NoCrops-B2030    & PI-GWL-t6     & All crops at 2030            & PI-GWL-t6         \\
-GWL-NoCr-B2030-02    & PI-GWL-t6     & All crops at 2030            & PI-GWL-t6         \\
 GWL-NoCrops-B2035    & PI-GWL-B2035  & All crops at 2035            & PI-GWL-B2035      \\
 GWL-NoCrops-B2040    & PI-GWL-B2040  & All crops at 2040            & PI-GWL-B2040      \\
 GWL-NoCrops-B2045    & PI-GWL-B2045  & All crops at 2045            & PI-GWL-B2045      \\
 GWL-NoCrops-B2050    & PI-GWL-B2050  & All crops at 2050            & PI-GWL-B2050      \\
 GWL-NoCrops-B2055    & PI-GWL-B2055  & All crops at 2055            & PI-GWL-B2055      \\
 GWL-NoCrops-B2060    & Pi-GWL-B2060  & All crops at 2060            & Pi-GWL-B2060      \\
-GWL-NoCr-B2060-02    & Pi-GWL-B2060  & All crops at 2060            & Pi-GWL-B2060      \\
 GWL-EqFor-B2060      & Pi-GWL-B2060  & Only crops at 2030           & Pi-GWL-B2060      \\
-GWL-CO2only-B2030    & PI-GWL-t6     & No land-use change           & GWL-NoCrops-B2030 \\ \hline
 \end{tabular}
 \end{table}
 
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
-        \includegraphics[width=\linewidth]{../plots/tree_area_diff.png}
+        \includegraphics[width=\linewidth]{../../plots/tree_area_diff.png}
     \end{subfigure}
     \caption{Regions of forestation in the no-crop experiments.}
     \label{fig:forestation_on_crops}
@@ -186,7 +175,7 @@ GWL-CO2only-B2030    & PI-GWL-t6     & No land-use change           & GWL-NoCrop
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
-        \includegraphics[width=\linewidth]{../plots/experiment_branching.png}
+        \includegraphics[width=\linewidth]{../../plots/experiment_branching.png}
     \end{subfigure}
     \caption{Diagram of experiment branching points.}
     \label{fig:experiment_branching}
@@ -195,7 +184,7 @@ GWL-CO2only-B2030    & PI-GWL-t6     & No land-use change           & GWL-NoCrop
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
-        \includegraphics[width=\linewidth]{../plots/forest_area_historgrams.png}
+        \includegraphics[width=\linewidth]{../../plots/forest_area_historgrams.png}
     \end{subfigure}
     \caption{Area extent of total global existing forests in each simulation (dark green) and the additional forestation replacing crop lands (light green).}
     \label{fig:forestation_ammount}
@@ -223,16 +212,10 @@ Fig. \ref{fig:map_cLand} shows the 30-year mean at the end of simulation for the
 The distribution of land carbon uptake mirrors the expansion of forests cover as demonstrated in Fig. \ref{fig:forestation_on_crops}.
 There are a few small regions that undergo decreases in total land carbon, particularly in the alpine region of South Asia.
 
-The uptake of carbon by Australia is shown in Fig. \ref{fig:australia_cLand}.
-Approximately 5–12 Pg(C) is taken up by Australia after 100 years of forest establishment ($\sim$1 Gt(C)/year).
-There is less distinction between the different climate states when looking at the Australian region, due to the greater regional impacts internal climate variability.
-However, the highest GWL ensemble members (red lines) is in general larger than the lowest GWL ensemble members (pink lines).
-Hence, the effects of CO$_2$ fertilization are also evident for the Australian region alone.
-
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
-        \includesvg[width=\linewidth]{../plots/co2_surface_global_warming_level_no_crops.svg}
+        \includesvg[width=\linewidth]{../../plots/co2_surface_global_warming_level_no_crops.svg}
     \end{subfigure}
     \caption{Global mean surface CO$_2$ concentrations for each experiment. Thin lines are the standard global warming level simulations. Bold lines are the forestation experiments.}
     \label{fig:global_co2}
@@ -241,7 +224,7 @@ Hence, the effects of CO$_2$ fertilization are also evident for the Australian r
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
-        \includegraphics[width=\linewidth]{../plots/cLand_GWL_gloabl_sum.png}
+        \includegraphics[width=\linewidth]{../../plots/cLand_GWL_gloabl_sum.png}
     \end{subfigure}
     \caption{Global sum of the total land carbon content difference between the global warming level simulations and the forestation experiments.}
     \label{fig:global_cLand}
@@ -250,7 +233,7 @@ Hence, the effects of CO$_2$ fertilization are also evident for the Australian r
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
-        \includegraphics[width=\linewidth]{../plots/cpools_gloabl_sum.png}
+        \includegraphics[width=\linewidth]{../../plots/cpools_gloabl_sum.png}
     \end{subfigure}
     \caption{Global sum of the carbon pools' difference between the global warming level simulations and the forestation experiments.}
     \label{fig:global_cpools}
@@ -259,28 +242,10 @@ Hence, the effects of CO$_2$ fertilization are also evident for the Australian r
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
-        \includegraphics[width=\linewidth]{../plots/cLand_GWL-NoCrops-B2050_last20.png}
+        \includegraphics[width=\linewidth]{../../plots/cLand_GWL-NoCrops-B2050_last20.png}
     \end{subfigure}
     \caption{Global map of 2070--2100 mean total land carbon content difference between the global warming level simulations and the forestation experiments 2050 branching point.}
     \label{fig:map_cLand}
-\end{figure}
-
-%\begin{figure}[H]
-%    \centering
-%    \begin{subfigure}[b]{\linewidth}
-%        \includegraphics[width=\linewidth]{../plots/cLand_GWL-NoCrops-B2050_australia_last20.png}
-%    \end{subfigure}
-%    \caption{Australian map of 2070--2100 mean total land carbon content difference between the global warming level simulations and the forestation experiments 2050 branching point.}
-%    \label{fig:aus_map_cLand}
-%\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[b]{\linewidth}
-        \includegraphics[width=\linewidth]{../plots/cLand_GWL_australia_sum.png}
-    \end{subfigure}
-    \caption{Australian sum of the total land carbon content difference between the global warming level simulations and the forestation experiments.}
-    \label{fig:australia_cLand}
 \end{figure}
 
 \subsection{Climate}
@@ -294,32 +259,10 @@ Locations that have forestation occurring generally have increases in temperatur
 This localised warming is likely related to an increased albedo from forest cover.
 \footnote{This probably exceeds the local cooling effect from increased surface roughness and evapotranspiration. CABLE seems to underestimate this effect somehow.}
 
-There exists some regional variability in the temperature as demonstrated in Fig. \ref{fig:tas_australia}, which shows the Australian 30-year mean temperature response from forestation for each global warming level.
-The 2040 instance show substantial cooling compared to the global warming levels of other branching points.
-On the other hand, the 2050 branching point shows relatively weak cooling compared tot he others.
-
-%\begin{figure}[H]
-%    \centering
-%    \begin{subfigure}[b]{\linewidth}
-%        \includegraphics[width=\linewidth]{../plots/tas_timeseries.png}
-%    \end{subfigure}
-%    \caption{Global mean surface temperature for the piControl simulation and the piNoCrops simulation.}
-%    \label{fig:pre-industrial_temperature_tseries}
-%\end{figure}
-%
-%\begin{figure}[H]
-%    \centering
-%    \begin{subfigure}[b]{\linewidth}
-%        \includegraphics[width=\linewidth]{../plots/temperature_diff.png}
-%    \end{subfigure}
-%    \caption{Surface temperature difference between the piControl simulation and the piNoCrops simulation, averaged over the last 20 years of each simulation.}
-%    \label{fig:pre-industrial_temperature_map}
-%\end{figure}
-
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
-        \includegraphics[width=\linewidth]{../plots/tas_GWL_gloabl_mean.png}
+        \includegraphics[width=\linewidth]{../../plots/tas_GWL_gloabl_mean.png}
     \end{subfigure}
     \caption{Timeseries of the change in global mean surface air temperature from forestation, expressed as a difference between the forestation experiment and the standard global warming level simulation.}
     \label{fig:global_temperature_timeseries}
@@ -328,36 +271,10 @@ On the other hand, the 2050 branching point shows relatively weak cooling compar
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
-        \includegraphics[width=\linewidth]{../plots/tas_all_experiments_last30_sig.png}
+        \includegraphics[width=\linewidth]{../../plots/tas_all_experiments_last30_sig.png}
     \end{subfigure}
     \caption{Map of the change in surface air temperature from forestation averaged over the last 30 years of simulation, expressed as a difference between the forestation experiment and the standard global warming level simulation.}
     \label{fig:temperature_map}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[b]{0.4\linewidth}
-        \includegraphics[width=\linewidth]{../plots/tas_GWL-NoCrops-B2030_australia_last30.png}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.4\linewidth}
-        \includegraphics[width=\linewidth]{../plots/tas_GWL-NoCrops-B2035_australia_last30.png}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.4\linewidth}
-        \includegraphics[width=\linewidth]{../plots/tas_GWL-NoCrops-B2040_australia_last30.png}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.4\linewidth}
-        \includegraphics[width=\linewidth]{../plots/tas_GWL-NoCrops-B2045_australia_last30.png}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.4\linewidth}
-        \includegraphics[width=\linewidth]{../plots/tas_GWL-NoCrops-B2055_australia_last30.png}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.4\linewidth}
-        \includegraphics[width=\linewidth]{../plots/tas_GWL-NoCrops-B2060_australia_last30.png}
-    \end{subfigure}
-    \caption{Temperature difference from forestation in Australia averaged over the last 30 years of the simulation for each global warming level branching at 2030–2060.
-% I should probably use a longer averaging period than 30 years. I have 200 years available. Maybe 50 years would be better?    
-    }
-    \label{fig:tas_australia}
 \end{figure}
 
 \subsubsection{Precipitation}
@@ -367,14 +284,10 @@ genereally shows decreasing precipitation associated with global scale forestati
 However, most of these decreases are non-local impacts occurring over the equatorial global oceans (Fig. \ref{fig:pr_map}).
 There are regions over the land that display increases in precipitation such as the amazon region of South America and Australasia.
 
-In Australia, precipitation generally increases in response to forestation and the associated global cooling.
-Most of the increases in precipitation occur in eastern Australia.
-A few grid cells in southwest western Australia consistently show a small increase in precipitation in response to forestation.
-
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
-        \includegraphics[width=\linewidth]{../plots/pr_GWL_gloabl_mean.png}
+        \includegraphics[width=\linewidth]{../../plots/pr_GWL_gloabl_mean.png}
     \end{subfigure}
     \caption{Timeseries of the change in global mean precipitation rate from forestation, expressed as a difference between the forestation experiment and the standard global warming level simulation.}
     \label{fig:global_pr_timeseries}
@@ -383,34 +296,10 @@ A few grid cells in southwest western Australia consistently show a small increa
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
-        \includegraphics[width=\linewidth]{../plots/pr_all_experiments_last30_sig.png}
+        \includegraphics[width=\linewidth]{../../plots/pr_all_experiments_last30_sig.png}
     \end{subfigure}
     \caption{Map of the change in precipitation rate from forestation averaged over the last 30 years of simulation, expressed as a difference between the forestation experiment and the reference global warming level simulation.}
     \label{fig:pr_map}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[b]{0.4\linewidth}
-        \includegraphics[width=\linewidth]{../plots/pr_GWL-NoCrops-B2030_australia_last30.png}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.4\linewidth}
-        \includegraphics[width=\linewidth]{../plots/pr_GWL-NoCrops-B2035_australia_last30.png}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.4\linewidth}
-        \includegraphics[width=\linewidth]{../plots/pr_GWL-NoCrops-B2040_australia_last30.png}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.4\linewidth}
-        \includegraphics[width=\linewidth]{../plots/pr_GWL-NoCrops-B2045_australia_last30.png}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.4\linewidth}
-        \includegraphics[width=\linewidth]{../plots/pr_GWL-NoCrops-B2055_australia_last30.png}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.4\linewidth}
-        \includegraphics[width=\linewidth]{../plots/pr_GWL-NoCrops-B2060_australia_last30.png}
-    \end{subfigure}
-    \caption{Precipitation rate difference from forestation in Australia averaged over the last 30 years of the simulation for each global warming level branching at 2030–2060.}
-    \label{fig:pr_australia}
 \end{figure}
 
 \section{Discussion}
@@ -426,7 +315,7 @@ We perform experiments of ...
 Forestation in ACCESS shows significant global cooling from increased carbon sink on the land surface.
 Warmer climates with higher CO2 fertilization effect have greater sequestration on the land surface.
 Some localized warming occurs with forestation in response to an increase in albedo. 
-Many land regions show increases in response to forestation, including Australia.
+Many land regions show increases in response to forestation.
 
 \printbibliography
 
