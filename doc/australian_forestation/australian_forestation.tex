@@ -35,20 +35,21 @@
 [Placeholder]
 
 \raggedright
-\parindent=.35in % Setting raggedright removes paragraph indents. This puts them back.
+\parindent=0.35in % Setting raggedright removes paragraph indents. This puts them back.
 
 \section{Introduction}
 
-Meeting the net-zero commitments of the Paris Agreement will require not only fossil fuel mitigation but also active carbon dioxide removal (CDR) strategies since some sources of greenhouse gasses are difficult to abate immediately (citations).
-Australia's current long-term emissions reduction strategy relies on a large portion of its emissions reduction coming from land-based solutions to offset emissions, such as by forests and soil carbon (citations).
-Meanwhile, emerging technologies (such as biofules with carbon capture and storage) may also allows for permanent removal of CO$_2$ (citations).
+Meeting the net-zero commitments of the Paris Agreement will require not only fossil fuel mitigation but also active carbon dioxide removal (CDR) strategies since some sources of greenhouse gasses are difficult to abate immediately \parencite{van_vuuren_rcp26_2011, vaughan_review_2011, rogelj_emission_2011}.
+Australia's current long-term emissions reduction strategy relies on a large portion of its emissions reduction coming from land-based solutions to offset emissions, such as by forests and soil carbon \parencite{smith_longterm_2022, australian_government_2021}.
+Sequestration by the terrestrial biosphere by forestation has been identified as having significant potential in Australia \parencite{fitch_australias_2022}.
+Meanwhile, in many long-term projections of sustainable development, emerging technologies that utilize biomass from forests (such as biofules with carbon capture and storage) are assumed to provide permanent removal of CO$_2$ \parencite{pour_opportunities_2018}.
 The preservation for natural forests and development of managed forests is therefore a key resource to achieve net-zero by 2050, and its land-use requirements compete with agricultural requirements, particularly in an expanding population and economy (citations).
 The land-use changes required would potentially involve some abandonment of marginal traditional agricultural lands to make way for forests, either for commercial harvesting or as new protected natural lands.
 
 The growth of new forests can affect the climate in various ways: by carbon assimilation with contributed to the reduction of atmospheric CO$_2$ concentrations (c), by altering physical surface properties which in turn may either warm or cool surface temperatures and alter the hydrological cycle (c), and finally by emission of reactive volatile organic compounds \parencite{weber_chemistry_albedo_2024}. The impact of new forests on climate also depends on the type of existing land-use or cover that existed before the transition. Afforestation occurs when new forests are planted where none existed previously, reforestation occurs on lands that have previously undergone clearing and are being restored to forest.
 
 It is expected that a large area forestation is required in order to have a mitigating effect on the climate.
-In one scenario of global-scale forestation, \cite{loughran_limited_2023} showed that an area of $\sim$5 million km2 is unlikely to have a substantial effect on global temperatures without reducing fossil-fuel emissions.
+In one scenario of global-scale forestation, \cite{loughran_limited_2023} showed that an area of $\sim$5 million km$^2$ is unlikely to have a substantial effect on global temperatures without concurrent reduction of fossil-fuel emissions.
 
 The CO$_2$ removal potential and climate mitigation of forestation is still poorly understood for Australia.
 Integrated assessment models in the past have provided plausible scenarios of global forestation for CMIP6, but these scenarios do not have any additional forest area expansion in Australia \parencite{loughran_limited_2023} and are therefore unsuitable for investigating the CDR potential of Australian forests and the biogeophysical impacts.
@@ -183,6 +184,17 @@ Hence, the effects of CO$_2$ fertilization are also evident for the Australian r
     \label{fig:australia_cLand}
 \end{figure}
 
+\subsubsection{Deployment extent}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \includegraphics[width=\linewidth]{../../plots/cLand_partial_forestation_australia_tseries.png}
+    \end{subfigure}
+    \caption{Time series of land carbon uptake from forestation in Australia on 10\%, 25\%, 50\% and 100\% of croplands.}
+    \label{fig:australia_cLand_tseries}
+\end{figure}
+
 \subsection{Climate impacts of forestation}
 
 \subsubsection{Temperature}
@@ -274,18 +286,34 @@ A few grid cells in southwest western Australia consistently show a small increa
     \label{fig:pr_australia}
 \end{figure}
 
+% the other simulations
+\subsection{Forestation deployment}
+
+%\begin{figure}[H]
+%    \centering
+%    \begin{subfigure}[b]{0.4\linewidth}
+%        \includegraphics[width=\linewidth]{../../plots/<temp_aus_deployment>.png}
+%    \end{subfigure}
+%    \caption{Temperature response from forestation at different forestation deployment extents on croplands.}
+%    \label{fig:temp_australia_deployment}
+%\end{figure}
+
 \section{Discussion}
 
 Limitations of using ACCESS: no fire, no tree death or demography, no PFT-climate dynamics, under estimation of evapotranspiration/hydrology leading to dominance of albedo, there are decrease in soil carbon with forestation and soil carbon uncertainties.
 
 Realism of forestation scenario.
 
+Assumption of forestation occuring accross the glob is reasonable.
+Forestation in isolation is not enough to reduce co2 concentrations to mitigate warming.
+Any CO2 removal strategies in Australia must occur with concurrent removal in other parts of the globe.
+
 \section{Conclusion}
 
-We perform experiments of ...
+Forestation in Australia has the potential remove a considerable amount of CO2 from the atmosphere.
 
 Forestation in ACCESS shows significant global cooling from increased carbon sink on the land surface.
-Warmer climates with higher CO2 fertilization effect have greater sequestration on the land surface.
+Warmer climates with higher CO$_2$ fertilization effect have greater sequestration on the land surface.
 Some localized warming occurs with forestation in response to an increase in albedo. 
 Many land regions show increases in response to forestation, including Australia.
 
