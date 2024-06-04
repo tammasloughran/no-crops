@@ -46,13 +46,12 @@ The land-use changes required would potentially involve some abandonment of marg
 
 The growth of new forests can affect the climate in various ways: by carbon assimilation with contributed to the reduction of atmospheric CO$_2$ concentrations (c), by altering physical surface properties which in turn may either warm or cool surface temperatures and alter the hydrological cycle (c), and finally by emission of reactive volatile organic compounds \parencite{weber_chemistry_albedo_2024}. The impact of new forests on climate also depends on the type of existing land-use or cover that existed before the transition. Afforestation occurs when new forests are planted where none existed previously, reforestation occurs on lands that have previously undergone clearing and are being restored to forest.
 
-% Findings of existing studies eg loughran et al.
+% Findings of existing studies 
 
 The CO$_2$ removal potential and climate mitigation of forestation is still poorly understood for Australia.
 Integrated assessment models in the past have provided plausible scenarios of global forestation for CMIP6, but these scenarios do not have any additional forest area expansion in Australia \parencite{loughran_limited_2023} and are therefore unsuitable for investigating the CDR potential of Australian forests and the biogeophysical impacts.
 Furthermore, we do not have projections under stable climates at different global warming levels that are consistent with the Paris agreement targets.
-% This is probably better as a separate paper.
-%In fact, how ACCESS responds to forestation in general is still poorly understood and fundamental land-use change experiments are needed to establish the suitability of the model for assessing the CDR potential of Australia's terrestrial biosphere.
+
 Therefore, we aim to create a range of projections of the CDR potential of forestation for both Australia and the globe under a variety of possible stabilized future climate states.
 
 We run ACCESS-ESM1-5 under pre-industrial and present day and future climate to estimate the productivity and climate effects of forests under different mitigation scenarios.
@@ -211,7 +210,6 @@ The warmer and higher the atmospheric CO$_2$ concentration, the greater the CO$_
 This is supported by Fig. \ref{fig:global_cLand}, which shows the difference of total land carbon from forestation relative to the respective GWL simulation.
 150–180 Pg(C) is taken up by the land surface by forestation, depending on the climate state and atmospheric CO$_2$ concentration.
 
-% Might cut this. only mildly interesting.
 Fig. \ref{fig:global_cpools} shows global mean time series of each carbon pool.
 ~85\% is contained in wood, and is therefore available to be used as wood products if forestation is implemented as wood production plantations.
 CABLE's soil carbon pools show decreases in response to increases in forest cover.
@@ -280,6 +278,15 @@ Hence, the effects of CO$_2$ fertilization are also evident for the Australian r
     \end{subfigure}
     \caption{Australian sum of the total land carbon content difference between the global warming level simulations and the forestation experiments.}
     \label{fig:australia_cLand}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \includegraphics[width=\linewidth]{../plots/cLand_single_pft_forestation_australia_tseries.png}
+    \end{subfigure}
+    \caption{Timeseries of the change in Australian total land uptake from forestation.}
+    \label{fig:australia_cland_timeseries}
 \end{figure}
 
 \subsection{Climate}
@@ -353,8 +360,7 @@ On the other hand, the 2050 branching point shows relatively weak cooling compar
     \begin{subfigure}[b]{0.4\linewidth}
         \includegraphics[width=\linewidth]{../plots/tas_GWL-NoCrops-B2060_australia_last30.png}
     \end{subfigure}
-    \caption{Temperature difference from forestation in Australia averaged over the last 30 years of the simulation for each global warming level branching at 2030–2060.
-% I should probably use a longer averaging period than 30 years. I have 200 years available. Maybe 50 years would be better?    
+    \caption{Temperature difference from forestation in Australia averaged over the last 30 years of the simulation for each global warming level branching at 2030–2060.   
     }
     \label{fig:tas_australia}
 \end{figure}

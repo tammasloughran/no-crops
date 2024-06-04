@@ -19,7 +19,7 @@
 \setlength{\parindent}{1cm}
 \linenumbers
 
-\title{Large-scale forestation in Australia using ACCESS-ESM1.5}
+\title{The climate impacts of forestation in Australia}
 \author{Tammas Loughran et al.}
 
 \begin{document}
@@ -43,10 +43,10 @@ Meeting the net-zero commitments of the Paris Agreement will require not only fo
 Australia's current long-term emissions reduction strategy relies on a large portion of its emissions reduction coming from land-based solutions to offset emissions, such as by forests and soil carbon \parencite{smith_longterm_2022, australian_government_2021}.
 Sequestration by the terrestrial biosphere by forestation has been identified as having significant potential in Australia \parencite{fitch_australias_2022}.
 Meanwhile, in many long-term projections of sustainable development, emerging technologies that utilize biomass from forests (such as biofules with carbon capture and storage) are assumed to provide permanent removal of CO$_2$ \parencite{pour_opportunities_2018}.
-The preservation for natural forests and development of managed forests is therefore a key resource to achieve net-zero by 2050, and its land-use requirements compete with agricultural requirements, particularly in an expanding population and economy (citations).
+The preservation for natural forests and development of managed forests is therefore a key resource to achieve net-zero by 2050, and its land-use requirements compete with agricultural requirements, particularly in an expanding population and economy \parencite{fitch_australias_2022}.
 The land-use changes required would potentially involve some abandonment of marginal traditional agricultural lands to make way for forests, either for commercial harvesting or as new protected natural lands.
 
-The growth of new forests can affect the climate in various ways: by carbon assimilation with contributed to the reduction of atmospheric CO$_2$ concentrations (c), by altering physical surface properties which in turn may either warm or cool surface temperatures and alter the hydrological cycle (c), and finally by emission of reactive volatile organic compounds \parencite{weber_chemistry_albedo_2024}. The impact of new forests on climate also depends on the type of existing land-use or cover that existed before the transition. Afforestation occurs when new forests are planted where none existed previously, reforestation occurs on lands that have previously undergone clearing and are being restored to forest.
+The growth of new forests can affect the climate in various ways: by carbon assimilation with contributed to the reduction of atmospheric CO$_2$ concentrations, by altering physical surface properties which in turn may either warm or cool surface temperatures and alter the hydrological cycle \parencite{pongratz_biogeophysical_2010}, and finally by emission of reactive volatile organic compounds \parencite{weber_chemistry_albedo_2024}. The impact of new forests on climate also depends on the type of existing land-use or cover that existed before the transition. Afforestation occurs when new forests are planted where none existed previously, reforestation occurs on lands that have previously undergone clearing and are being restored to forest.
 
 It is expected that a large area forestation is required in order to have a mitigating effect on the climate.
 In one scenario of global-scale forestation, \cite{loughran_limited_2023} showed that an area of $\sim$5 million km$^2$ is unlikely to have a substantial effect on global temperatures without concurrent reduction of fossil-fuel emissions.
@@ -68,11 +68,15 @@ We also create forestation scenarios with specific biome types to differentiate 
 
 We use the coupled Earth system model ACCESS-ESM1-5 to simulate the climate for scenarios with global-scale forest expansion.
 ACCESS-ESM1-5 is a fully coupled atmosphere, land, ocean and cryosphere model that includes a fully interactive and dynamic carbon cycle.
-It is composed of the UM atmosphere in the GA1 configuration \parencite{martin_analysis_2010}, the MOM5 ocean model \parencite{griffies_elements_2012} with WOMBAT ocean biogeochemistry (c), CICE sea ice model \parencite{hunke_cice_nodate} and CABLE3 for the land surface model \parencite{law_carbon_2017}.
+It is composed of the UM atmosphere in the GA1 configuration \parencite{martin_analysis_2010}, the MOM5 ocean model \parencite{griffies_elements_2012}, CICE sea ice model \parencite{hunke_cice_nodate} and CABLE3 for the land surface model and WOMBAT ocean biogeochemistry \parencite{law_carbon_2017}.
 The land surface vegetation is represented as sub-grid fractional tiles.
 Transitions between vegetation types undergoes land use change as described in \cite{ziehn_australian_2020}.
 
-To project forestation scenarios that are relevant to the targets of Paris Agreement, we utilize the existing Global Warming Level (GWL) experiments conducted with ACCESS-ESM1-5 first proposed by \cite{king_studying_2021} as reference simulations, upon which forestation land-use changes are applied. The GWL simulations branch from the high emissions scenario \textit{ssp-585} (c) at regular 5-year intervals over the period 2030–2060. We apply forestation after 400 years of simulation to ensure the climate has reached a reasonable stabilization. At that point the GWL simulations represent stabilized climates ranging 1.5–3 \textcelsius warming relative to pre-industrial conditions. On long timescales, there still exists some climate drift driven by the slow processes of the oceanic circulation (known as zero-emissions commitment (ZEC); c Chamberlain et al.), however, for the purposes of examining the impact of forestation on climate (on time-scales of 200 years), the amount of drift is negligible.
+\subsection{Future global warming levels}
+
+To project forestation scenarios that are relevant to the targets of Paris Agreement, we utilize the existing Global Warming Level (GWL) experiments conducted with ACCESS-ESM1-5 first proposed by \cite{king_studying_2021} as reference simulations, upon which forestation land-use changes are applied. The GWL simulations branch from the high emissions scenario \textit{ssp-585} \parencite{oneill_scenario_2016, jones_c4mip_2016} at regular 5-year intervals over the period 2030–2060. We apply forestation after 400 years of simulation to ensure the climate has reached a reasonable stabilization. At that point the GWL simulations represent stabilized climates ranging 1.5–3 \textcelsius  warming relative to pre-industrial conditions. On long timescales, there still exists some climate drift driven by the slow processes of the oceanic circulation (known as zero-emissions commitment (ZEC); \cite{chamberlain_southern_2023}), however, for the purposes of examining the impact of forestation on climate (on time-scales of 200 years), the amount of drift is negligible.
+
+\subsection{Forestation scenarios}
 
 We apply forestation as a replacement of croplands with any of three forest vegetation types.
 In CABLE, there are four vegetation types that represent forests: evergreen broad leaf, evergreen needle leaf, deciduous broad leaf and deciduous needle leaf.
@@ -101,27 +105,30 @@ Table \ref{tab:experiments} shows a summary of all of the forestation experiment
 \end{itemize}
 
 % The experiment naming conventions used here are inconsistent and are subject to change to something that is easier to understand for this paper.
-The global warming level simulations (2030–2060) test the effects of forestation under different climate states.
+The forestation at different global warming level simulations (2030–2060) test the effects of forestation under different climate states.
 The forestation using a single vegetation type tests the effects of forestation assuming that forestation is implemented with a single species.
 While this may not be realistic for some regions (for example planting evergreen broad leaf forests in mid–high latitudes) it simplifies examining regional climate effects of particular vegetation types, rather than a mixture of types that occurs in the standard GWL forestation simulations.
 The partial deployment experiments feature forestation on 50\%, 25\% or 10\% of all croplands per grid-cell.
 These experiments aim to represent a sample of more practical/achievable deployment of forestation as a CDR strategy, with a view to determining the how much forestation would be needed to have a significant impact on climate.
-
 The partial deployment and single vegetation type experiments branch from the 2030 GWL.
 All experiments are compared relative to their respective GWL experiment from which they are branched.
+Two ensemble members have been run for each experiment.
+
+% Might need a justification for applying forestation globally as well as in australia. It's expected that whatever CDR strategies that are implemented are in conjuction with global efforts. Given that he experiments are consistent with given global warming levels, then this is probably an okay assumption.
 
 In general, existing forest area decreases over the course of the \textit{ssp-585} scenario and croplands increases.
-In Australia there is 0.58 M km$^2$ expansion of forest area, or a 61\% increase in Australia's forest area.
-The area of croplands in Australian in ACCESS that are used for forest expansion are shown in \ref{fig:to_forest}.
+Therefore, the forest cover area in the latter branching points of the global warming levels is smaller than the earlier global warming levels, and thus the additional forest area for the forestation experiments is slightly larger in the latter global warming levels than the earlier ones.
+The area of croplands in Australia that are used for forest expansion at the 2060 global warming level are shown in Fig. \ref{fig:to_forest}.
 Forestation in Australia occurs in two regions: the Southeast and the Southwestern regions.
 The amount of forestation occurring globally in the GWL experiments is $\sim$19 M km$^2$, this is an expansion of $\sim$39\% of global forest area.
+In Australia, there is 0.58 M km$^2$ expansion of forest area, or a 61\% increase in Australia's forest area.
 
 \begin{figure}[H]
     \begin{subfigure}[b]{\linewidth}
         \centering
         \includegraphics[width=0.5\linewidth]{../../plots/tree_area_diff_australia.png}
     \end{subfigure}
-    \caption{Replace crops}
+    \caption{Area of croplands that have been replaced with forest cover in the 2060 global warming level forestation scenario.}
     \label{fig:to_forest}
 \end{figure}
 
@@ -156,15 +163,15 @@ The warmer and higher the atmospheric CO$_2$ concentration results in a greater 
 Figure \ref{fig:australia_cLand} shows the timeseries of the total land carbon content difference between the forestation experiment and the reference global warming level simulation.
 The uptake of carbon by the land surface is about 7±2.5 Pg(C) after 100 years and maintins a saturation point for the folowing 100 years.
 This uptake of carbon is fairly similar under different global warming levels in Australia.
-$\sim$85\% is contained in wood component of the vegetation, and this ammount is therefore available to be used as wood products if forestation is implemented as wood production plantations.
+$\sim$85\% is contained in wood component of the vegetation, and this amount is therefore available to be used as wood products if forestation is implemented as wood production plantations.
 
-Fig. \ref{fig:aus_map_cLand} shows the 30-year mean at the end of simulation for the 2050 GWL (for example).
-The distribution of land carbon uptake mirrors the expansion of forests cover as demonstrated in Fig. \ref{fig:to_forest}.
-It shows the total uptake of carbon by the land surface.
-Approximately 5–12 Pg(C) is taken up by Australia after 100 years of forest establishment ($\sim$1 Gt(C)/year).
+Fig. \ref{fig:aus_map_cLand} shows the 30-year mean of the difference in total land carbon at the end of simulation for the 2050 GWL (for example).
+The distribution of land carbon uptake mirrors the expansion of forests cover as demonstrated in Fig. \ref{fig:to_forest}, however, much of the land carbon uptake occurs in the Eastern region of Australia.
+Fig. \ref{fig:australia_cLand} shows the time series of the total Australian carbon uptake by the land surface for each global warming level.
+Approximately 5–12 Pg(C) is taken up by Australia after 100 years of forest establishment ($\sim$1 Gt(C)/year) and is approximately maintained throughout the 200 year simulation.
 There is less distinction between the different climate states when looking at the Australian region, due to the greater regional impacts internal climate variability.
-However, the highest GWL ensemble members (red lines) is in general larger than the lowest GWL ensemble members (pink lines).
-Hence, the effects of CO$_2$ fertilization are also evident for the Australian region alone.
+For example the lowest GWL is highlighted in pink, and it lies within the variability of the other global warming levels.
+%However, the highest GWL ensemble members (blue lines) is in general larger than the lowest GWL ensemble members. % Not really sure about this, will probably leave out.
 
 \begin{figure}[H]
     \centering
@@ -178,9 +185,9 @@ Hence, the effects of CO$_2$ fertilization are also evident for the Australian r
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{\linewidth}
-        \includegraphics[width=\linewidth]{../../plots/cLand_GWL_australia_sum.png}
+        \includegraphics[width=\linewidth]{../../plots/cLand_GWL_australia_sum_ensemble_mean.png}
     \end{subfigure}
-    \caption{Australian sum of the total land carbon content difference between the global warming level simulations and the forestation experiments.}
+    \caption{Australian sum of the total land carbon content difference between the global warming level simulations and the forestation experiments. Only the ensemble mean (of 2 ensemble members) of each global warming level are shown.}
     \label{fig:australia_cLand}
 \end{figure}
 
@@ -194,6 +201,9 @@ Hence, the effects of CO$_2$ fertilization are also evident for the Australian r
     \caption{Time series of land carbon uptake from forestation in Australia on 10\%, 25\%, 50\% and 100\% of croplands.}
     \label{fig:australia_cLand_tseries}
 \end{figure}
+
+The effect of limiting the extent of forestation deployment on croplands substantially affects the total uptake by the land surface.
+Deploying forests on only 50\% of croplands results in approximately half of the 
 
 \subsection{Climate impacts of forestation}
 
@@ -304,7 +314,18 @@ Limitations of using ACCESS: no fire, no tree death or demography, no PFT-climat
 
 Realism of forestation scenario.
 
-Assumption of forestation occuring accross the glob is reasonable.
+Since there is very little difference in land carbon uptake among the global warming levels, the effects of CO$_2$ fertilization, heat and water stress on vegetation do not have a substantial effect on the mitigation potential in the Australian region.
+The main factor is that area is made available for forestation.
+
+In ACCESS-ESM1.5, future warming scenarios (particularly under \textit{ssp-585}) generally show a warming and drying trend for Australia.
+While a drying trend is not the only possible hydrological outcome for Australia, it is consistent with historical trends in precipitation \parencite{ziehn_australian_2020}.
+It is expected that this will have an overall detrimental effect on the productivity of Australian vegetation in the future, however, this does not seem to have a significant impact on the results of figure \ref{fig:australia_cLand_tseries}.
+
+The ACCESS-ESM1.5 is just one model and therefore cannot sample the full range of uncertainty that may occur in the land carbon uptake and climate.
+Alternative future scenarios of Australian precipitation that are wetter could be provided by other earth system models.
+This could be an avenue for future research for Australian nature based solutions for CDR, but this can only be provided by an inter-comparison of models (for example \cite{loughran_limited_2023}) and is beyond the scope and resources available in this study.
+
+Assumption of forestation occurring across the globe is reasonable.
 Forestation in isolation is not enough to reduce co2 concentrations to mitigate warming.
 Any CO2 removal strategies in Australia must occur with concurrent removal in other parts of the globe.
 
