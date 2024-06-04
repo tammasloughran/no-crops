@@ -24,7 +24,8 @@ DATA_DIR = 'history/atm/netCDF'
 
 # Create list of PI-GWL files
 files = [f'{PI_GWL_DIR}/{expe}/{DATA_DIR}/{expe}.pa-040101_mon.nc' for expe in GWL_EXPERIMENTS]
-files[-1] = f'/g/data/p66/tfl561/ACCESS-ESM/GWL-NoCrops-B2060/history/atm/netCDF/GWL-NoCrops-B2060.pa-050001_mon.nc'
+files[-1] = f'/g/data/p66/tfl561/ACCESS-ESM/GWL-NoCrops-B2060/history/atm/netCDF/'\
+        'GWL-NoCrops-B2060.pa-050001_mon.nc'
 
 # Create land area map
 land_area = cdo.gridarea(input=files[0], returnCdf='data/land_area.nc').variables['cell_area'][:]
@@ -56,10 +57,10 @@ discrete_bins = mpl.colors.BoundaryNorm(
 cmap = plt.cm.get_cmap('YlGn')
 cmap.set_under('white')
 colors = ax.pcolormesh(lons, lats, diff,
-        norm=discrete_bins,
         cmap=cmap,
-        linewidth=0.2,
         edgecolors='face',
+        linewidth=0.2,
+        norm=discrete_bins,
         transform=ccrs.PlateCarree(),
         )
 ax.coastlines()
@@ -71,4 +72,39 @@ plt.colorbar(colors,
         )
 plt.title('Tree area difference')
 plt.savefig(f'plots/tree_area_diff.png', dpi=200)
+plt.show()
+
+def plot_australia(data:np.ndarray, title:str)->None:
+    """Plot a map of Asutralia anomalies.
+    """
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    ax.set_extent([110,160,-45,-10], crs=ccrs.PlateCarree())
+    bnds = np.arange(0, 3.2, 0.2)
+    bnds[0] = 0.01
+    discrete_bins = mpl.colors.BoundaryNorm(
+            boundaries=bnds,
+            ncolors=256
+            )
+    cmap = plt.cm.get_cmap('YlGn')
+    cmap.set_under('white')
+    shading = ax.pcolormesh(lons, lats, data,
+            cmap=cmap,
+            edgecolors='face',
+            linewidth=0.2,
+            norm=discrete_bins,
+            transform=ccrs.PlateCarree(),
+            )
+    cbar = plt.colorbar(shading,
+            ticks=np.arange(0.1, 3.1, 0.2),
+            label='Area (Mha)',
+            orientation='horizontal',
+            pad=0.05,
+            )
+    ax.coastlines()
+    plt.title(title)
+
+fig = plt.figure()
+plot_australia(diff, "Tree area difference")
+plt.tight_layout()
+plt.savefig('plots/tree_area_diff_australia.png', dpi=200)
 plt.show()

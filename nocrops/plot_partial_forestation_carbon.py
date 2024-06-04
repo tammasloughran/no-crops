@@ -72,7 +72,7 @@ def plot_australia(data:np.ndarray, title:str)->None:
 
 
 def plot_map(data:np.ndarray, title:str)->None:
-    """Plot a global map pf surface air temperature.
+    """Plot a global map of surface air temperature.
     """
     ax = plt.axes(projection=ccrs.Robinson())
     discrete_bins = mpl.colors.BoundaryNorm(
