@@ -22,6 +22,9 @@ EXPERIMENTS = [
         'GWL-50pct-B2030',
         'GWL-25pct-B2030',
         'GWL-10pct-B2030',
+        'GWL-50pc-B2030-02',
+        'GWL-25pc-B2030-02',
+        'GWL-10pc-B2030-02',
         ]
 ARCHIVE_DIR = '/g/data/p66/tfl561/archive_data'
 WOODFIG = 1
@@ -33,15 +36,21 @@ LABELS = {
         'PI-GWL-t6':'Global warming level',
         'GWL-NoCrops-B2030':'100%',
         'GWL-10pct-B2030':'10%',
+        'GWL-10pc-B2030-02':'10%',
         'GWL-25pct-B2030':'25%',
+        'GWL-25pc-B2030-02':'25%',
         'GWL-50pct-B2030':'50%',
+        'GWL-50pc-B2030-02':'50%',
         }
 COLORS = {
         'PI-GWL-t6':'black',
         'GWL-NoCrops-B2030':'blue',
         'GWL-10pct-B2030':'lightgreen',
+        'GWL-10pc-B2030-02':'lightgreen',
         'GWL-25pct-B2030':'forestgreen',
+        'GWL-25pc-B2030-02':'forestgreen',
         'GWL-50pct-B2030':'darkgreen',
+        'GWL-50pc-B2030-02':'darkgreen',
         }
 
 example_file = f'/g/data/p66/tfl561/archive_data/GWL-EGNL-B2030/cLand_GWL-EGNL-B2030_0500-0700.nc'
@@ -52,7 +61,6 @@ ncfile.close()
 
 plt.figure(WOODFIG)
 data = dict()
-maps = dict()
 for exper in EXPERIMENTS:
     fractions_file = glob.glob(f'{ARCHIVE_DIR}/{exper}/frac_*.nc')[0]
 
@@ -94,5 +102,17 @@ plt.legend(frameon=False)
 plt.ylabel('$\Delta$cLand [Pg(C)]')
 plt.xlabel('Year')
 plt.savefig('plots/cLand_partial_forestation_australia_tseries.png', dpi=200)
+
+plt.figure()
+for exper in ['50','25','10']:
+    e1 = f'GWL-{exper}pct-B2030'
+    e2 = f'GWL-{exper}pc-B2030-02'
+    length = len(data[e2])
+    ens_mean = (data[e1][:length] + data[e2])/2
+    dates = np.arange(length)
+    plt.plot(dates, ens_mean - data['PI-GWL-t6'][:length], color=COLORS[e1], label=LABELS[e1])
+plt.legend(frameon=False)
+plt.ylabel('$\Delta$cLand [Pg(C)]')
+plt.xlabel('Year')
 
 plt.show()
