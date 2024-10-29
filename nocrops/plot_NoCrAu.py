@@ -21,7 +21,7 @@ ANOTHER_EXPER = f'{ARCHIVE_DIR}/GWL-NoCrops-B2030/tas_GWL-NoCrops-B2030_0500-070
 DPI = 200
 EXAMPLE_FLIE = f'{ARCHIVE_DIR}/GWL-NoCrops-B2030/cLeaf_GWL-NoCrops-B2030_0500-0700.nc'
 EXPER_SIM = f'{ARCHIVE_DIR}/GWL-NoCrAu-B2030/tas_GWL-NoCrAu-B2030_0500-0700.nc'
-LAST30 = str(-30*12)
+LAST30 = str(-100*12)
 READ_ONLY = 'r'
 REF_SIM = f'{ARCHIVE_DIR}/PI-GWL-t6/tas_PI-GWL-t6_0500-0700.nc'
 
@@ -87,7 +87,8 @@ def plot_australia(data:np.ndarray, title:str, save:str)->None:
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
     australia_lonlat = [110,155,-45,-10]
-    ax.set_extent(australia_lonlat, crs=ccrs.PlateCarree())
+    #ax.set_extent(australia_lonlat, crs=ccrs.PlateCarree())
+    ax.set_extent([110,165,-55,-10], crs=ccrs.PlateCarree())
     discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-2.1, 2.2, 0.2), ncolors=256)
     colors = ax.pcolormesh(lons, lats, data,
             cmap='seismic',
@@ -159,7 +160,7 @@ plt.xlim(left=0, right=200)
 plt.legend()
 plt.ylabel('Surface air temperature ($^{\circ}$C)')
 plt.xlabel('Time (year)')
-plt.title('Globali mean temperature anomaly from forestation')
+plt.title('Global mean temperature anomaly from forestation')
 plt.savefig('plots/tas_GWL-NoCrAu-B2030_global_tseries.png', dpi=DPI)
 
 # Plot the time series of Australia wide mean.
