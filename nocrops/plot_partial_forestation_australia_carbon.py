@@ -13,6 +13,7 @@ from cdo import Cdo
 cdo = Cdo()
 cdo.debug = False
 import cdo_decorators as cdod
+import scipy.stats as stats
 import ipdb
 
 
@@ -103,6 +104,7 @@ plt.ylabel('$\Delta$cLand [Pg(C)]')
 plt.xlabel('Year')
 plt.savefig('plots/cLand_partial_forestation_australia_tseries.png', dpi=200)
 
+# Plot the ensemble mean.
 plt.figure()
 for exper in ['50','25','10']:
     e1 = f'GWL-{exper}pct-B2030'
@@ -111,8 +113,33 @@ for exper in ['50','25','10']:
     ens_mean = (data[e1][:length] + data[e2])/2
     dates = np.arange(length)
     plt.plot(dates, ens_mean - data['PI-GWL-t6'][:length], color=COLORS[e1], label=LABELS[e1])
+plt.plot(dates, data['GWL-NoCrops-B2030'] - data['PI-GWL-t6'],
+        color='blue',
+        label='100%',
+        )
 plt.legend(frameon=False)
 plt.ylabel('$\Delta$cLand [Pg(C)]')
 plt.xlabel('Year')
 
 plt.show()
+
+# Do a regression of Area vs C uptake
+c_uptake = []
+area = []
+for x in EXPERIMENTS[1:]:
+    area.append(int(LABELS[x][:-1]))
+    c_uptake.append(np.mean(data[x][-100:] - data['PI-GWL-t6'][-100:]))
+plt.figure()
+plt.scatter(area, c_uptake)
+regression = stats.linregress(area, c_uptake)
+
+def c_up(reg, x):
+    return reg.intercept + reg.slope*x
+
+plt.plot([0,100], [c_up(regression, 0), c_up(regression, 100)])
+plt.xlabel('Forestation on croplands (%)')
+plt.ylabel('$\Delta$ CLand [Pg (C)]')
+plt.show()
+
+import ipdb
+ipdb.set_trace()
