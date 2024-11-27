@@ -18,8 +18,11 @@ EXPERIMENTS = [
         'PI-GWL-t6',
         'GWL-NoCrops-B2030',
         'GWL-EGNL-B2030',
+        'GWL-EGNL-B2030-02',
         'GWL-EGBL-B2030',
+        'GWL-EGBL-B2030-02',
         'GWL-DCBL-B2030',
+        'GWL-DCBL-B2030-02',
         ]
 ARCHIVE_DIR = '/g/data/p66/tfl561/archive_data'
 WOODFIG = 1
@@ -38,10 +41,15 @@ COLORS = {
         'PI-GWL-t6':'black',
         'GWL-NoCrops-B2030':'blue',
         'GWL-EGNL-B2030':'lightgreen',
+        'GWL-EGNL-B2030-02':'lightgreen',
         'GWL-EGBL-B2030':'darkgreen',
+        'GWL-EGBL-B2030-02':'darkgreen',
         'GWL-DCBL-B2030':'orange',
+        'GWL-DCBL-B2030-02':'orange',
         }
 VARIABLE = 'cLand'
+
+load_np = True
 
 example_file = f'/g/data/p66/tfl561/archive_data/GWL-EGNL-B2030/cLand_GWL-EGNL-B2030_0500-0700.nc'
 ncfile = nc.Dataset(example_file)
@@ -78,20 +86,58 @@ for exper in EXPERIMENTS:
     files = sorted(glob.glob(f'{ARCHIVE_DIR}/{exper}/{VARIABLE}_*'))
 
     # Load data
-    data[exper] = cdo_load(input=files[0], var=VARIABLE)
+    if not load_np:
+        data[exper] = cdo_load(input=files[0], var=VARIABLE)
+        # Save data
+        np.save(f'data/cland_{exper}.npy', data[exper].data)
+    else:
+        data[exper] = np.load(f'data/cland_{exper}.npy')
 
-    # Plot
+for exper in [
+        'GWL-NoCrops-B2030',
+        'GWL-EGNL-B2030',
+        'GWL-EGBL-B2030',
+        'GWL-DCBL-B2030',
+        ]:
     length = len(data[exper])
     dates = np.arange(length)#/12.0
-    if not exper=='PI-GWL-t6':
-        plt.plot(dates, data[exper] - data['PI-GWL-t6'][:length],
+    plt.plot(dates, data[exper] - data['PI-GWL-t6'][:length],
+            color=COLORS[exper],
+            alpha=0.2,
+            )
+    if (exper!='GWL-NoCrops-B2030'):
+        # Calculate ensemble mean
+        length = len(data[exper+'-02'])
+        ens_mean = (data[exper][:length] + data[exper+'-02'])/2.0
+
+        length = len(data[exper+'-02'])
+        dates = np.arange(length)#/12.0
+        plt.plot(dates, data[exper+'-02'] - data['PI-GWL-t6'][:length],
+                color=COLORS[exper+'-02'],
+                alpha=0.2,
+                )
+        length = len(ens_mean)
+        dates = np.arange(length)#/12.0
+        plt.plot(dates, ens_mean - data['PI-GWL-t6'][:length],
                 color=COLORS[exper],
                 label=LABELS[exper],
                 )
+length = len(data['GWL-NoCrops-B2030'])
+dates = np.arange(length)#/12.0
+plt.plot(dates, data['GWL-NoCrops-B2030'] - data['PI-GWL-t6'][:length],
+        color=COLORS['GWL-NoCrops-B2030'],
+        label=LABELS['GWL-NoCrops-B2030'],
+        )
+
 
 plt.legend(frameon=False)
 plt.ylabel(f'{VARIABLE} [Pg(C)]')
 plt.xlabel('Year')
+length = len(data['GWL-EGNL-B2030'])
+dates = np.arange(length)#/12.0
+plt.xlim(left=dates[0], right=dates[-1])
+plt.hlines(y=0, xmin=dates[0], xmax=dates[-1], color='black')
+plt.title("Australia sum total land carbon")
 plt.savefig(f'plots/{VARIABLE}_single_pft_forestation_australia_tseries.png', dpi=200)
 
 plt.show()

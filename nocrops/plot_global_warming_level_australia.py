@@ -26,15 +26,16 @@ RAW_NOCROP_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
 TILE_FRAC_CODE = 'fld_s03i317'
 
 COLORS = {
-        #'GWL-NoCrops-B2030':'#62EA00',
-        'GWL-NoCrops-B2030':'pink',
+        'GWL-NoCrops-B2030':'#62EA00',
+        #'GWL-NoCrops-B2030':'pink',
         'GWL-NoCrops-B2035':'#24CC00',
         'GWL-NoCrops-B2040':'#079F2A',
         'GWL-NoCrops-B2045':'#00786B',
         'GWL-NoCrops-B2050':'#055992',
         'GWL-NoCrops-B2055':'#1140AB',
         'GWL-NoCrops-B2060':'#1E31B6',
-        'GWL-NoCr-B2030-02':'pink',
+        #'GWL-NoCr-B2030-02':'pink',
+        'GWL-NoCr-B2030-02':'#62EA00',
         #'GWL-NoCrops-B2060':'red',
         'GWL-NoCr-B2030-02':'#62EA00',
         'GWL-NoCr-B2035-02':'#24CC00',
@@ -211,18 +212,21 @@ for ens in ensembles:
     total = np.zeros(cLand_diff[ens[0]].shape)
     i = 0
     for exp in ens:
+        nmonths = cLand_diff[exp].squeeze().shape[0]
+        years = np.linspace(500, 500+nmonths*(1/12), nmonths)
+        plt.plot(years, cLand_diff[exp].squeeze()/G_IN_PG, color=COLORS[ens[0]], alpha=0.2)
         total = my_add(total, cLand_diff[exp])
         i += 1
     plot_this = total/i/G_IN_PG
     nmonths = plot_this.squeeze().shape[0]
     years = np.linspace(500, 500+nmonths*(1/12), nmonths)
-    plt.plot(years, plot_this.squeeze(), color=COLORS[ens[0]], label=ens[0])
+    plt.plot(years, plot_this.squeeze(), color=COLORS[ens[0]], label=ens[0][-4:])
 plt.legend()
 plt.xlim(left=500)
 plt.ylim(bottom=0)
 plt.xlabel('Time (years)')
 plt.ylabel('$\Delta$cLand Pg(C)')
-plt.title('Ensemble mean')
+plt.title('Australia sum total land carbon')
 
 
 # Save figures.

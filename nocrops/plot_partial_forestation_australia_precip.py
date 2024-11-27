@@ -72,7 +72,7 @@ def cdo_load(var:str, input:str)->np.ma.MaskedArray:
 def moving_average(x:np.ndarray, window:int)->np.ndarray:
     """Calculate a moving average using a window of size `window`.
     """
-    return np.convolve(x, np.ones(window), mode='valid')/window
+    return np.convolve(x, np.ones(window), mode='same')/window
 
 
 # Load grid data.
@@ -112,7 +112,7 @@ for exper in [
             color=COLORS[exper],
             alpha=0.4,
             )
-    plt.plot(dates[15:-14], moving_average(ensmean[exper] - data['PI-GWL-t6'][:length], 30),
+    plt.plot(dates, moving_average(ensmean[exper] - data['PI-GWL-t6'][:length], 30),
             color=COLORS[exper],
             label=LABELS[exper],
             )

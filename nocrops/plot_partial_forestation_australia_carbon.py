@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
 # Plot the carbon pools from the single pft no-crops forestation experiments.
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-from cartopy import crs as ccrs
-import netCDF4 as nc
 import glob
 import sys
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import netCDF4 as nc
+import numpy as np
+from cartopy import crs as ccrs
+
 [sys.path.append(i) for i in ['.', '..']]
-from contrib.tools import global_mean
 from cdo import Cdo
+
+from contrib.tools import global_mean
+
 cdo = Cdo()
 cdo.debug = False
 import cdo_decorators as cdod
-import scipy.stats as stats
 import ipdb
-
+import scipy.stats as stats
 
 EXPERIMENTS = [
         'PI-GWL-t6',
@@ -53,6 +56,13 @@ COLORS = {
         'GWL-50pct-B2030':'darkgreen',
         'GWL-50pc-B2030-02':'darkgreen',
         }
+
+
+def regression_point(reg, x:float):
+    """Return a point on a regression line.
+    """
+    return reg.intercept + reg.slope*x
+
 
 example_file = f'/g/data/p66/tfl561/archive_data/GWL-EGNL-B2030/cLand_GWL-EGNL-B2030_0500-0700.nc'
 ncfile = nc.Dataset(example_file)
@@ -96,12 +106,30 @@ for exper in EXPERIMENTS:
     if not exper=='PI-GWL-t6':
         plt.plot(dates, data[exper] - data['PI-GWL-t6'][:length],
                 color=COLORS[exper],
-                label=LABELS[exper],
+                #label=LABELS[exper],
+                alpha=0.2,
                 )
+
+for exper in ['50','25','10']:
+    e1 = f'GWL-{exper}pct-B2030'
+    e2 = f'GWL-{exper}pc-B2030-02'
+    length = len(data[e2])
+    ens_mean = (data[e1][:length] + data[e2])/2
+    dates = np.arange(length)
+    plt.plot(dates, ens_mean - data['PI-GWL-t6'][:length], color=COLORS[e1], label=LABELS[e1])
+plt.plot(
+        np.arange(len(data['PI-GWL-t6'])),
+        data['GWL-NoCrops-B2030'] - data['PI-GWL-t6'],
+        color='blue',
+        label='100%',
+        )
 
 plt.legend(frameon=False)
 plt.ylabel('$\Delta$cLand [Pg(C)]')
 plt.xlabel('Year')
+plt.hlines(0, xmin=dates[0], xmax=dates[-1], color='black')
+plt.xlim(left=dates[0], right=dates[-1])
+plt.title("Australia sum total land carbon")
 plt.savefig('plots/cLand_partial_forestation_australia_tseries.png', dpi=200)
 
 # Plot the ensemble mean.
@@ -112,14 +140,24 @@ for exper in ['50','25','10']:
     length = len(data[e2])
     ens_mean = (data[e1][:length] + data[e2])/2
     dates = np.arange(length)
-    plt.plot(dates, ens_mean - data['PI-GWL-t6'][:length], color=COLORS[e1], label=LABELS[e1])
-plt.plot(dates, data['GWL-NoCrops-B2030'] - data['PI-GWL-t6'],
+    plt.plot(
+            dates,
+            ens_mean - data['PI-GWL-t6'][:length],
+            color=COLORS[e1],
+            label=LABELS[e1],
+            )
+plt.plot(
+        np.arange(len(data['PI-GWL-t6'])),
+        data['GWL-NoCrops-B2030'] - data['PI-GWL-t6'],
         color='blue',
         label='100%',
         )
+plt.hlines(0, xmin=dates[0], xmax=dates[-1], color='black')
 plt.legend(frameon=False)
 plt.ylabel('$\Delta$cLand [Pg(C)]')
 plt.xlabel('Year')
+plt.xlim(left=dates[0], right=dates[-1])
+plt.title("Australia sum total land carbon")
 
 plt.show()
 
@@ -132,14 +170,8 @@ for x in EXPERIMENTS[1:]:
 plt.figure()
 plt.scatter(area, c_uptake)
 regression = stats.linregress(area, c_uptake)
-
-def c_up(reg, x):
-    return reg.intercept + reg.slope*x
-
-plt.plot([0,100], [c_up(regression, 0), c_up(regression, 100)])
+plt.plot([0,100], [regression_point(regression, 0), regression_point(regression, 100)])
 plt.xlabel('Forestation on croplands (%)')
 plt.ylabel('$\Delta$ CLand [Pg (C)]')
 plt.show()
 
-import ipdb
-ipdb.set_trace()

@@ -54,7 +54,7 @@ EXPERIMENTS = [
         'GWL-NoCrops-B2050',
         'GWL-NoCrops-B2055',
         'GWL-NoCrops-B2060',
-        'GWL-EqFor-B2060',
+        #'GWL-EqFor-B2060',
         ]
 COLORS = {
         'esm-esm-piNoCrops':'black',
@@ -79,6 +79,22 @@ COLORS = {
         'GWL-NoCrops-B2055':'#1140AB',
         'GWL-NoCrops-B2060':'#1E31B6',
         'GWL-EqFor-B2060':'deepskyblue'
+        }
+LABELS = {
+        'GWL-10pct-B2030':'10% deployment',
+        'GWL-25pct-B2030':'25% deployment',
+        'GWL-50pct-B2030':'50% deployment',
+        'GWL-EGBL-B2030':'Evergreen broad leaf',
+        'GWL-EGNL-B2030':'Evergreen needle leaf',
+        'GWL-DCBL-B2030':'Deciduous broad leaf',
+        'GWL-NoCrops-B2030':'2030',
+        'GWL-NoCrops-B2035':'2035',
+        'GWL-NoCrops-B2040':'2040',
+        'GWL-NoCrops-B2045':'2045',
+        'GWL-NoCrops-B2050':'2050',
+        'GWL-NoCrops-B2055':'2055',
+        'GWL-NoCrops-B2060':'2060',
+        'GWL-EqFor-B2060':'2030'
         }
 YEARS = {
         'esm-esm-piNoCrops':np.arange(0*12, 100*12)/12 + 100,
@@ -141,14 +157,13 @@ for exper in EXPERIMENTS:
             )
     if 'GWL' in exper[:4] in exper:
         handles.append(handle[0])
-        labels.append(exper)
+        labels.append(LABELS[exper])
 
-plt.legend(handles, labels, fontsize='small', frameon=False)
+plt.legend(handles, labels, fontsize='small', frameon=False, ncols=2)
 plt.xlabel('Time (years)')
 plt.ylabel('CO$_2$ (ppm)')
 plt.xlim(left=0, right=700)
-#plt.show()
-plt.savefig('plots/co2_surface_global_warming_level_no_crops.svg', dpi=200)
+plt.savefig('plots/co2_surface_global_warming_level_no_crops.png', dpi=200)
 
 
 def pretty_print(data):
