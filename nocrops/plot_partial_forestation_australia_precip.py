@@ -112,7 +112,7 @@ for exper in [
             color=COLORS[exper],
             alpha=0.4,
             )
-    plt.plot(dates, moving_average(ensmean[exper] - data['PI-GWL-t6'][:length], 30),
+    plt.plot(dates, moving_average(ensmean[exper] - data['PI-GWL-t6'][:length], 50),
             color=COLORS[exper],
             label=LABELS[exper],
             )

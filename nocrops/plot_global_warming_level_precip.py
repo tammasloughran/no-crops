@@ -40,7 +40,7 @@ TILE_FRAC_CODE = 'fld_s03i317'
 EXAMPLE_FLIE = f'{ARCHIVE_DIR}/GWL-NoCrops-B2030/cLeaf_GWL-NoCrops-B2030_0500-0700.nc'
 G_IN_PG = 10**15
 DPI = 200
-LAST30 = str(-30*12)
+LAST100 = str(-100*12)
 COLORS = {
         'GWL-NoCrops-B2030':'#62EA00',
         'GWL-NoCrops-B2035':'#24CC00',
@@ -73,7 +73,7 @@ def yearly_mean_from_monthly(data:np.ndarray)->np.ndarray:
     return np.average(data.reshape(toshape), axis=1, weights=fraction_of_year)
 
 
-def plot_last30(data_to_plot, title, save):
+def plot_last100(data_to_plot, title, save):
     fig2 = plt.figure()
     ax = fig2.add_subplot(1, 1, 1, projection=ccrs.Robinson())
     discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-3.1, 3.2, 0.2), ncolors=256)
@@ -93,7 +93,7 @@ def plot_last30(data_to_plot, title, save):
     plt.savefig(f'plots/{save}', dpi=DPI)
 
 
-def plot_australia_last30(data_to_plot, title, save):
+def plot_australia_last100(data_to_plot, title, save):
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
     discrete_bins = mpl.colors.BoundaryNorm(boundaries=np.arange(-3.1, 3.2, 0.2), ncolors=256)
@@ -116,7 +116,7 @@ def plot_australia_last30(data_to_plot, title, save):
 
 
 def apply_time_series_to_plot(years, line):
-    smooth = moving_average(line, window=10)
+    smooth = moving_average(line, window=50)
     plt.figure(1)
     plt.plot(years, line,
             color=COLORS[nocrop_exp],
@@ -133,7 +133,7 @@ def apply_time_series_to_plot(years, line):
     plt.legend(frameon=False)
 
 
-load_from_npy = True
+load_from_npy = False
 
 # Load lats and lons.
 ncfile = nc.Dataset(EXAMPLE_FLIE, 'r')
@@ -161,10 +161,10 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
 
 
         @cdod.cdo_mulc('86400')
-        @cdod.cdo_seltimestep(f'{LAST30}/-1') # last 30 years
+        @cdod.cdo_seltimestep(f'{LAST100}/-1') # last 100 years
         @cdod.cdo_timmean # Temporal average
-        def load_last30(var, input:str)->np.ma.MaskedArray:
-            """Load last 30 year mean of a carbon pool variable.
+        def load_last100(var, input:str)->np.ma.MaskedArray:
+            """Load last 100 year mean of a carbon pool variable.
             """
             ncfile = cdo.copy(input=input, returnCdf=True, options='-L')
             return ncfile.variables[var][:]
@@ -175,7 +175,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
         if load_from_npy:
             for var in VARIABLES.keys():
                 data[exp][var] = np.load(f'data/{var}_{exp}_global_mean.npy')
-                data_tmean[exp][var] = np.load(f'data/{var}_{exp}_last30.npy')
+                data_tmean[exp][var] = np.load(f'data/{var}_{exp}_last100.npy')
         else:
             for var in VARIABLES.keys():
                 print(f"Loading {var}")
@@ -183,10 +183,10 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
                         input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
                         )
                 np.save(f'data/{var}_{exp}_global_mean.npy', data[exp][var].data)
-                data_tmean[exp][var] = load_last30(var,
+                data_tmean[exp][var] = load_last100(var,
                         input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
                         )
-                np.save(f'data/{var}_{exp}_last30.npy', data_tmean[exp][var].data)
+                np.save(f'data/{var}_{exp}_last100.npy', data_tmean[exp][var].data)
 
     # Plot the difference time series of temperature.
     if len(data[nocrop_exp]['pr'])==1223:
@@ -198,15 +198,15 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     years = yearly_mean_from_monthly(years)
     apply_time_series_to_plot(years, line)
 
-    # Plot the map of the difference for the last 30 years
+    # Plot the map of the difference for the last 100 years
     data_to_plot = data_tmean[nocrop_exp]['pr'].squeeze() - data_tmean[gwl_exp]['pr'].squeeze()
-    plot_last30(data_to_plot, f'{nocrop_exp} - {gwl_exp}', f'pr_{nocrop_exp}_last30.png')
+    plot_last100(data_to_plot, f'{nocrop_exp} - {gwl_exp}', f'pr_{nocrop_exp}_last100.png')
 
-    # Plot the map of the difference for the last 30 years in Australia.
-    plot_australia_last30(
+    # Plot the map of the difference for the last 100 years in Australia.
+    plot_australia_last100(
             data_to_plot,
             f'{nocrop_exp} - {gwl_exp}',
-            f'pr_{nocrop_exp}_australia_last30.png',
+            f'pr_{nocrop_exp}_australia_last100.png',
             )
 
 # Significance testing of all experiments. I have tried standard ttest, kolmogorov-smirnov test
@@ -228,12 +228,12 @@ data_to_plot = data_to_plot.mean(axis=0)
 data_to_plot[pvalue>0.05] = np.nan
 
 # Plotting
-plot_last30(data_to_plot, 'Mean of all experiments', 'pr_all_experiments_last30_sig.png')
+plot_last100(data_to_plot, 'Mean of all experiments', 'pr_all_experiments_last100_sig.png')
 
-plot_australia_last30(
+plot_australia_last100(
         data_to_plot,
         'Mean of all experiments',
-        'pr_all_experiments_australia_last30_sig.png',
+        'pr_all_experiments_australia_last100_sig.png',
         )
 
 # Save figures.

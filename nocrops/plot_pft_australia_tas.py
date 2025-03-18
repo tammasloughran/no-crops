@@ -27,7 +27,7 @@ EXPERIMENTS = [
         ]
 ARCHIVE_DIR = '/g/data/p66/tfl561/archive_data'
 WOODFIG = 1
-LAST30 = str(-30*12)
+LAST100 = str(-100*12)
 TILE_FRAC_CODE = 'fld_s03i317'
 RAW_CMIP_DIR = '/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5'
 RAW_NOCROP_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
@@ -105,7 +105,7 @@ for exper in [
         'GWL-EGBL-B2030',
         'GWL-DCBL-B2030',
         ]:
-    plt.plot(dates[:190], moving_average((data[exper][:190]+data[exper+'-02'][:190])/2 - data['PI-GWL-t6'][:190], 30),
+    plt.plot(dates[:190], moving_average((data[exper][:190]+data[exper+'-02'][:190])/2 - data['PI-GWL-t6'][:190], 50),
             color=COLORS[exper],
             label=LABELS[exper],
             )

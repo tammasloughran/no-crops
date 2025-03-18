@@ -47,8 +47,19 @@ EXPERIMENTS = {
         'PI-GWL-B2060-duplicate':'GWL-NoCr-B2060-02',
         #'PI-GWL-B2060_duplicate':'GWL-EqFor-B2060',
         }
+LABELS = {
+        'GWL-NoCrops-B2030':'2030',
+        'GWL-NoCr-B2030-02':None,
+        'GWL-NoCrops-B2035':'2035',
+        'GWL-NoCrops-B2040':'2040',
+        'GWL-NoCrops-B2045':'2045',
+        'GWL-NoCrops-B2050':'2050',
+        'GWL-NoCrops-B2055':'2055',
+        'GWL-NoCrops-B2060':'2060',
+        'GWL-NoCr-B2060-02':None,
+        }
 LAND_FRAC_CODE = 'fld_s03i395'
-LAST20 = str(-20*12)
+LAST100 = str(-100*12)
 LOAD_FROM_NP = True
 RAW_CMIP_DIR = '/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5'
 RAW_NOCROP_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
@@ -66,8 +77,8 @@ def decorate_plot()->None:
     plt.ylabel('$\Delta$ Precip. (mm/day)')
     plt.xlim(left=500, right=700)
     plt.hlines(y=0, xmin=500, xmax=700, color='black')
-    plt.ylim(bottom=-1.5, top=1)
-    plt.legend(frameon=False)
+    plt.ylim(bottom=-1, top=1)
+    plt.legend(frameon=False, ncols=2)
 
 
 @cdod.cdo_sellonlatbox('110', '155', '-45', '-10') # Australia region.
@@ -189,13 +200,14 @@ def main()->None:
         years = np.linspace(500, 500+nmonths*(1/12), nmonths)
         #plt.plot(yearly_mean_from_monthly(years), yearly_mean_from_monthly(pr_diff.squeeze()),
         #        color=COLORS[nocrop_exp],
-        #        alpha=0.3,
+        #        alpha=0.2,
         #        )
         plt.plot(
                 yearly_mean_from_monthly(years),
-                moving_average(yearly_mean_from_monthly(pr_diff.squeeze()), window=20),
+                moving_average(yearly_mean_from_monthly(pr_diff.squeeze()), window=50),
                 color=COLORS[nocrop_exp],
-                label=exp,
+                label=LABELS[exp],
+                linewidth=1,
                 )
 
         # Plot the difference for forestation regions only.
@@ -207,9 +219,10 @@ def main()->None:
         #        color=COLORS[nocrop_exp],
         #        alpha=0.3,
         #        )
-        plt.plot(yearly_mean_from_monthly(years), moving_average(yearly_pr_for_diff, window=20),
+        plt.plot(yearly_mean_from_monthly(years), moving_average(yearly_pr_for_diff, window=50),
                 color=COLORS[nocrop_exp],
-                label=exp,
+                label=LABELS[exp],
+                linewidth=1,
                 )
 
     """Significance testing the lines. I use here the Wilcoxon non-parametric test for the

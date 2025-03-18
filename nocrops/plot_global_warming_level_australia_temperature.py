@@ -48,7 +48,7 @@ EXPERIMENTS = {
         #'PI-GWL-B2060_duplicate':'GWL-EqFor-B2060',
         }
 LAND_FRAC_CODE = 'fld_s03i395'
-LAST20 = str(-20*12)
+LAST100 = str(-100*12)
 LOAD_FROM_NP = True
 RAW_CMIP_DIR = '/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5'
 RAW_NOCROP_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
@@ -184,11 +184,15 @@ def main()->None:
                 color=COLORS[nocrop_exp],
                 alpha=0.3,
                 )
+        if '-' in exp[-4:]:
+            label = ''
+        else:
+            label = exp[-4:]
         plt.plot(
                 yearly_mean_from_monthly(years),
-                moving_average(yearly_mean_from_monthly(tas_diff.squeeze()), window=20),
+                moving_average(yearly_mean_from_monthly(tas_diff.squeeze()), window=30),
                 color=COLORS[nocrop_exp],
-                label=exp,
+                label=label,
                 )
 
         # Plot the difference for forestation regions only.
@@ -200,9 +204,9 @@ def main()->None:
                 color=COLORS[nocrop_exp],
                 alpha=0.3,
                 )
-        plt.plot(yearly_mean_from_monthly(years), moving_average(yearly_tas_for_diff, window=20),
+        plt.plot(yearly_mean_from_monthly(years), moving_average(yearly_tas_for_diff, window=30),
                 color=COLORS[nocrop_exp],
-                label=exp,
+                label=label,
                 )
 
     """Significance testing the lines. I use here the Wilcoxon non-parametric test for the
@@ -234,7 +238,7 @@ def main()->None:
     plt.figure(2)
     decorate_plot()
     plt.title('Australia forestation area mean')
-    plt.savefig(f'plots/tas_GWL_australia_forestation_only.png')
+    plt.savefig(f'plots/tas_GWL_australia_forestation_only.png', dpi=200)
     plt.show()
 
 if __name__=='__main__':

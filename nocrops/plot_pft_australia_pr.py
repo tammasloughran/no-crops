@@ -26,7 +26,7 @@ EXPERIMENTS = [
         ]
 ARCHIVE_DIR = '/g/data/p66/tfl561/archive_data'
 WOODFIG = 1
-LAST30 = str(-30*12)
+LAST100 = str(-100*12)
 TILE_FRAC_CODE = 'fld_s03i317'
 RAW_CMIP_DIR = '/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5'
 RAW_NOCROP_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
@@ -112,7 +112,7 @@ for exper in [
             )
     length = len(data[exper+'-02'])
     ens_mean = (data[exper][:length] + data[exper+'-02'])/2.0
-    plt.plot(dates[:length], moving_average(ens_mean - data['PI-GWL-t6'][:length], window=30),
+    plt.plot(dates[:length], moving_average(ens_mean - data['PI-GWL-t6'][:length], window=50),
             color=COLORS[exper],
             label=LABELS[exper],
             )
@@ -120,7 +120,7 @@ length = len(data['GWL-NoCrops-B2030'])
 dates = np.arange(length)#/12.0
 plt.plot(
         dates,
-        moving_average(data['GWL-NoCrops-B2030'] - data['PI-GWL-t6'][:length], window=30),
+        moving_average(data['GWL-NoCrops-B2030'] - data['PI-GWL-t6'][:length], window=50),
         color=COLORS['GWL-NoCrops-B2030'],
         label=LABELS['GWL-NoCrops-B2030'],
         )

@@ -21,7 +21,7 @@ ANOTHER_EXPER = f'{ARCHIVE_DIR}/GWL-NoCrops-B2030/tas_GWL-NoCrops-B2030_0500-070
 DPI = 200
 EXAMPLE_FLIE = f'{ARCHIVE_DIR}/GWL-NoCrops-B2030/cLeaf_GWL-NoCrops-B2030_0500-0700.nc'
 EXPER_SIM = f'{ARCHIVE_DIR}/GWL-NoCrAu-B2030/tas_GWL-NoCrAu-B2030_0500-0700.nc'
-LAST30 = str(-100*12)
+LAST100 = str(-100*12)
 READ_ONLY = 'r'
 REF_SIM = f'{ARCHIVE_DIR}/PI-GWL-t6/tas_PI-GWL-t6_0500-0700.nc'
 
@@ -66,10 +66,10 @@ def load_global_mean(var, input:str)->np.ma.MaskedArray:
     return ncfile.variables[var][:].squeeze()
 
 
-@cdod.cdo_seltimestep(f'{LAST30}/-1') # last 30 years
+@cdod.cdo_seltimestep(f'{LAST100}/-1') # last 100 years
 @cdod.cdo_timmean # Temporal average
-def load_last30(var, input:str)->np.ma.MaskedArray:
-    """Load last 30 year mean of a carbon pool variable.
+def load_last100(var, input:str)->np.ma.MaskedArray:
+    """Load last 100 year mean of a carbon pool variable.
     """
     ncfile = cdo.copy(input=input, returnCdf=True, options='-L')
     return ncfile.variables[var][:].squeeze()
@@ -141,7 +141,7 @@ plt.plot(anomaly,
         label='Forestation in Australia only',
         alpha=0.4,
         )
-plt.plot(moving_average(anomaly, window=30),
+plt.plot(moving_average(anomaly, window=50),
         color=color,
         )
 
@@ -152,7 +152,7 @@ plt.plot(anomaly,
         label='Forestation at 2030',
         alpha=0.4,
         )
-plt.plot(moving_average(anomaly, window=30),
+plt.plot(moving_average(anomaly, window=50),
         color=color,
         )
 plt.hlines(0, dates[0], dates[-1], colors='k')
@@ -176,7 +176,7 @@ plt.plot(anomaly,
         label='Forestation in Australia only',
         alpha=0.4,
         )
-plt.plot(moving_average(anomaly, window=30),
+plt.plot(moving_average(anomaly, window=50),
         color=color,
         )
 
@@ -187,7 +187,7 @@ plt.plot(anomaly,
         label='Forestation at 2030',
         alpha=0.4,
         )
-plt.plot(moving_average(anomaly, window=30),
+plt.plot(moving_average(anomaly, window=50),
         color=color,
         )
 plt.hlines(0, dates[0], dates[-1], colors='k')
@@ -214,7 +214,7 @@ plt.plot(anomaly,
         label='Forestation in Australia only',
         alpha=0.4,
         )
-plt.plot(moving_average(anomaly, window=30),
+plt.plot(moving_average(anomaly, window=50),
         color=color,
         )
 
@@ -237,11 +237,11 @@ plt.title('Australia afforested area mean temperature anomaly')
 plt.savefig('plots/tas_GWL-NoCrAu-B2030_australia_forests_tseries.png', dpi=DPI)
 
 # plot the map of the end of the simulation.
-temp_last30_ref = load_last30('tas', input=REF_SIM)
-temp_last30_another = load_last30('tas', input=ANOTHER_EXPER)
-temp_last30_exper = load_last30('tas', input=EXPER_SIM)
+temp_last100_ref = load_last100('tas', input=REF_SIM)
+temp_last100_another = load_last100('tas', input=ANOTHER_EXPER)
+temp_last100_exper = load_last100('tas', input=EXPER_SIM)
 
-plot_australia(temp_last30_exper - temp_last30_ref,
+plot_australia(temp_last100_exper - temp_last100_ref,
         title='',
         save='tas_aus_only.png')
 plt.savefig('plots/tas_GWL-NoCrAu-B2030_australia_map.png', dpi=DPI)

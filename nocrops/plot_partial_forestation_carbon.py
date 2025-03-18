@@ -25,7 +25,7 @@ EXPERIMENTS = [
         ]
 ARCHIVE_DIR = '/g/data/p66/tfl561/archive_data'
 WOODFIG = 1
-LAST30 = str(-30*12)
+LAST100 = str(-100*12)
 TILE_FRAC_CODE = 'fld_s03i317'
 RAW_CMIP_DIR = '/g/data/p73/archive/non-CMIP/ACCESS-ESM1-5'
 RAW_NOCROP_DIR = '/g/data/p66/tfl561/ACCESS-ESM'
@@ -128,11 +128,11 @@ for exper in EXPERIMENTS:
     @cdod.cdo_mul(input2=fractions_file) # This experiment's cover fractions
     @cdod.cdo_mul(input2='data/cell_area.nc') # -> g(C)
     @cdod.cdo_vertsum()
-    @cdod.cdo_seltimestep(f'{LAST30}/-1') # last 20 years
+    @cdod.cdo_seltimestep(f'{LAST100}/-1') # last 100 years
     @cdod.cdo_timmean # Temporal average
     @cdod.cdo_divc('1e15') # -> Pg(C)
-    def cdo_load_last30(var:str, input:str)->np.ma.MaskedArray:
-        """Load last 30 year avearge of a variable using CDO.
+    def cdo_load_last100(var:str, input:str)->np.ma.MaskedArray:
+        """Load last 100 year avearge of a variable using CDO.
         """
         return cdo.copy(
                 input=input,
@@ -147,7 +147,7 @@ for exper in EXPERIMENTS:
 
     # Load data
     data[exper] = cdo_load(input=files[0], var='cLand')
-    maps[exper] = cdo_load_last30(input=files[0], var='cLand')
+    maps[exper] = cdo_load_last100(input=files[0], var='cLand')
 
     # Plot
     length = len(data[exper])
@@ -165,13 +165,13 @@ plt.savefig('plots/cLand_partial_forestation.png', dpi=200)
 
 plt.figure()
 plot_map(maps['GWL-10pct-B2030'] - maps['PI-GWL-t6'], title='10%')
-plt.savefig('plots/cLand_10pct_last30.png', dpi=200)
+plt.savefig('plots/cLand_10pct_last100.png', dpi=200)
 plt.figure()
 plot_map(maps['GWL-25pct-B2030'] - maps['PI-GWL-t6'], title='25%')
-plt.savefig('plots/cLand_25pct_last30.png', dpi=200)
+plt.savefig('plots/cLand_25pct_last100.png', dpi=200)
 plt.figure()
 plot_map(maps['GWL-50pct-B2030'] - maps['PI-GWL-t6'], title='50%')
-plt.savefig('plots/cLand_50pct_last30.png', dpi=200)
+plt.savefig('plots/cLand_50pct_last100.png', dpi=200)
 
 plt.figure()
 plot_australia(maps['GWL-10pct-B2030'] - maps['PI-GWL-t6'], title='10%')

@@ -37,7 +37,7 @@ TILE_FRAC_CODE = 'fld_s03i317'
 EXAMPLE_FLIE = f'{ARCHIVE_DIR}/GWL-NoCrops-B2030/cLeaf_GWL-NoCrops-B2030_0500-0700.nc'
 G_IN_PG = 10**15
 DPI = 200
-LAST30 = str(-30*12)
+LAST100 = str(-100*12)
 COLORS = {
         'GWL-NoCrops-B2030':'#62EA00',
         'GWL-NoCrops-B2035':'#24CC00',
@@ -81,11 +81,11 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
         data_tmean[exp] = {}
 
 
-        #@cdod.cdo_seltimestep(f'{LAST30}/-1') # last 30 years
-        @cdod.cdo_seltimestep(f'1/12') # last 30 years
+        #@cdod.cdo_seltimestep(f'{LAST100}/-1') # last 100 years
+        @cdod.cdo_seltimestep(f'1/12') # last year
         @cdod.cdo_timmean # Temporal average
-        def load_last30(var, input:str)->np.ma.MaskedArray:
-            """Load last 30 year mean of a carbon pool variable.
+        def load_last100(var, input:str)->np.ma.MaskedArray:
+            """Load last 100 year mean of a carbon pool variable.
             """
             ncfile = cdo.copy(input=input, returnCdf=True, options='-L')
             return ncfile.variables[var][:]
@@ -100,14 +100,14 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
             for var in VARIABLES.keys():
                 data_tmean[exp][var] = np.load(f'data/{var}_{exp}_firstyear.npy')
         #for var in VARIABLES.keys():
-            #data_tmean[exp][var] = load_last30(
+            #data_tmean[exp][var] = load_last100(
             #        var,
             #        input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
             #        )
-            #np.save(f'data/{var}_{exp}_last20.npy', data_tmean[exp][var].data) # [g(C)]
+            #np.save(f'data/{var}_{exp}_last100.npy', data_tmean[exp][var].data) # [g(C)]
             #np.save(f'data/{var}_{exp}_firstyear.npy', data_tmean[exp][var].data) # [g(C)]
 
-    # Plot the map of the difference for the last 20 years
+    # Plot the map of the difference for the last 100 years
     fig2 = plt.figure()
     ax = fig2.add_subplot(1, 1, 1, projection=ccrs.Robinson())
     colors = ax.pcolormesh(lons, lats,
@@ -126,7 +126,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     plt.title(f'{nocrop_exp} - {gwl_exp}')
     plt.savefig(f'plots/tas_{nocrop_exp}_firstyear.png', dpi=DPI)
 
-    # Plot the map of the difference for the last 30 years in Australia.
+    # Plot the map of the difference for the last 100 years in Australia.
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
     australia_lonlat = [110,155,-45,-10]

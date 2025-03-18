@@ -94,7 +94,7 @@ for exper in EXPERIMENTS:
                 color=COLORS[exper],
                 alpha=0.4,
                 )
-        plt.plot(dates[15:-14], moving_average(data[exper] - data['PI-GWL-t6'][:length], 30),
+        plt.plot(dates[15:-14], moving_average(data[exper] - data['PI-GWL-t6'][:length], 50),
                 color=COLORS[exper],
                 label=LABELS[exper],
                 )

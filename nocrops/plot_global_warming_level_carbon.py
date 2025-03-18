@@ -43,7 +43,7 @@ TILE_FRAC_CODE = 'fld_s03i317'
 EXAMPLE_FLIE = f'{ARCHIVE_DIR}/GWL-NoCrops-B2030/cLeaf_GWL-NoCrops-B2030_0500-0700.nc'
 G_IN_PG = 10**15
 DPI = 200
-LAST30 = str(-30*12)
+LAST100 = str(-100*12)
 COLORS = {
         'GWL-NoCrops-B2030':'#62EA00',
         'GWL-NoCrops-B2035':'#24CC00',
@@ -55,7 +55,7 @@ COLORS = {
         'GWL-EqFor-B2060':'deepskyblue',
         }
 
-load_from_npy = True
+load_from_npy = False
 
 # Cell area file
 cdo.gridarea(input=EXAMPLE_FLIE, output='data/cell_area.nc')
@@ -66,23 +66,24 @@ lats = ncfile.variables['lat'][:]
 lons = ncfile.variables['lon'][:]
 
 # Create tile frac file for both experiments.
-for exp in EXPERIMENTS.keys():
-    if 'duplicate' in exp: exp = 'PI-GWL-B2060'
-    cdo.selvar(
-            TILE_FRAC_CODE,
-            input=f'{RAW_CMIP_DIR}/{exp}/history/atm/netCDF/{exp}.pa-050101_mon.nc',
-            output=f'data/frac_{exp}.nc',
-            )
-for exp in EXPERIMENTS.values():
-    cdo.selvar(
-            TILE_FRAC_CODE,
-            input=f'{RAW_NOCROP_DIR}/{exp}/history/atm/netCDF/{exp}.pa-050101_mon.nc',
-            output=f'data/frac_{exp}.nc',
-            )
+#for exp in EXPERIMENTS.keys():
+#    if 'duplicate' in exp: exp = 'PI-GWL-B2060'
+#    cdo.selvar(
+#            TILE_FRAC_CODE,
+#            input=f'{RAW_CMIP_DIR}/{exp}/history/atm/netCDF/{exp}.pa-050101_mon.nc',
+#            output=f'data/frac_{exp}.nc',
+#            )
+#for exp in EXPERIMENTS.values():
+#    cdo.selvar(
+#            TILE_FRAC_CODE,
+#            input=f'{RAW_NOCROP_DIR}/{exp}/history/atm/netCDF/{exp}.pa-050101_mon.nc',
+#            output=f'data/frac_{exp}.nc',
+#            )
 
 data = {}
 data_tmean = {}
 plt.figure()
+mean = 0
 for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     if 'duplicate' in gwl_exp: gwl_exp = 'PI-GWL-B2060'
     for exp in [gwl_exp, nocrop_exp]:
@@ -105,10 +106,10 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
         @cdod.cdo_mul(input2=f'data/frac_{exp}.nc') # Multiply by tile fractions.
         @cdod.cdo_mul(input2='data/cell_area.nc') # Multiply by cell area.
         @cdod.cdo_vertsum(weights='FALSE') # Plant functional type sum.
-        @cdod.cdo_seltimestep(f'{LAST30}/-1') # last 20 years
+        @cdod.cdo_seltimestep(f'{LAST100}/-1') # last 100 years
         @cdod.cdo_timmean # Temporal average
-        def load_last20(var, input:str)->np.ma.MaskedArray:
-            """Load last 20 year mean of a carbon pool variable.
+        def load_last100(var, input:str)->np.ma.MaskedArray:
+            """Load last 100 year mean of a carbon pool variable.
             """
             ncfile = cdo.copy(input=input, returnCdf=True, options='-L')
             return ncfile.variables[var][:]
@@ -116,21 +117,20 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
 
         # Load the data.
         period = '0500-0700'
-        if load_from_npy:
-            for var in VARIABLES.keys():
+        for var in VARIABLES.keys():
+            if os.path.isfile(f'data/{var}_{exp}_last100.npy'):
                 data[exp][var] = np.load(f'data/{var}_{exp}_global_sum.npy') # [g(C)]
-                data_tmean[exp][var] = np.load(f'data/{var}_{exp}_last20.npy')
-        else:
-            for var in VARIABLES.keys():
+                data_tmean[exp][var] = np.load(f'data/{var}_{exp}_last100.npy')
+            else:
                 print(f"Loading {var}")
                 data[exp][var] = load_global_sum(var,
                         input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
                         )
                 np.save(f'data/{var}_{exp}_global_sum.npy', data[exp][var].data) # [g(C)]
-                data_tmean[exp][var] = load_last20(var,
+                data_tmean[exp][var] = load_last100(var,
                         input=f'{ARCHIVE_DIR}/{exp}/{var}_{exp}_{period}.nc',
                         )
-                np.save(f'data/{var}_{exp}_last20.npy', data_tmean[exp][var].data) # [g(C)]
+                np.save(f'data/{var}_{exp}_last100.npy', data_tmean[exp][var].data) # [g(C)]
 
         # Calculate cLand.
         data[exp]['cLand'] = 0
@@ -155,7 +155,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     plt.ylim(bottom=0, top=250)
     plt.legend(frameon=False)
 
-    # Plot the map of the difference for the last 20 years
+    # Plot the map of the difference for the last 100 years
     fig2 = plt.figure()
     ax = fig2.add_subplot(1, 1, 1, projection=ccrs.Robinson())
     discrete_bins = mpl.colors.BoundaryNorm(
@@ -175,7 +175,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
             pad=0.05,
             )
     plt.title(f'{nocrop_exp} - {gwl_exp}')
-    plt.savefig(f'plots/cLand_{nocrop_exp}_last20.png', dpi=DPI)
+    plt.savefig(f'plots/cLand_{nocrop_exp}_last100.png', dpi=DPI)
 
     # Plot the difference of all the carbon pools.
     plt.figure(3)
@@ -200,7 +200,7 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
     plt.annotate('cSlow', (675,-25))
     plt.title("Carbon pools")
 
-    # Plot the map of the difference for the last 20 years in Australia.
+    # Plot the map of the difference for the last 100 years in Australia.
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
     ax.set_extent([110,155,-45,-10], crs=ccrs.PlateCarree())
@@ -224,7 +224,35 @@ for gwl_exp,nocrop_exp in EXPERIMENTS.items():
             pad=0.05,
             )
     plt.title(f'{nocrop_exp} - {gwl_exp}')
-    plt.savefig(f'plots/cLand_{nocrop_exp}_australia_last20.png', dpi=DPI)
+    plt.savefig(f'plots/cLand_{nocrop_exp}_australia_last100.png', dpi=DPI)
+
+    mean += cLand_diff_tmean.squeeze()/G_IN_PG
+
+mean /= 7
+
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
+ax.set_extent([110,165,-45,-10], crs=ccrs.PlateCarree())
+discrete_bins = mpl.colors.BoundaryNorm(
+        boundaries=np.arange(-0.65, 0.65+0.1, 0.1),
+        ncolors=256,
+        )
+colors = ax.pcolormesh(
+        lons,
+        lats,
+        mean,
+        norm=discrete_bins,
+        cmap='seismic',
+        transform=ccrs.PlateCarree(),
+        )
+ax.coastlines()
+plt.colorbar(colors,
+        ticks=np.arange(-0.6, 0.6+0.1, 0.1),
+        label='$\Delta$cLand [Pg(C)]',
+        orientation='horizontal',
+        pad=0.05,
+        )
+plt.savefig(f'plots/cpools_australia_las100.png')
 
 # Save figures.
 plt.figure(3)
